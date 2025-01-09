@@ -5,39 +5,36 @@ import keyboard
 import os
 from datetime import datetime
 import json
+from utils import countdown_timer, check_for_signal_file, delete_signal_files
 
 # Configuration
-head_sensor_script = r'C:\Users\Tripodi Group\OneDrive - University of Cambridge\01 - PhD at LMB\Coding projects\240520 - IMU python\head_sensor.py'  # Path to your head sensor script
-camera_script = r"C:\Users\Tripodi Group\OneDrive - University of Cambridge\01 - PhD at LMB\Coding projects\240520 - IMU python\Camera.py"
 stim_board_port = 'COM23'
 baud_rate = 57600
 timeout = 2
-
-def start_stim_board():
-    try:
-        stim_board = serial.Serial(stim_board_port, baud_rate, timeout=timeout)
-        time.sleep(2)
-        stim_board.write(b's')
-    except serial.SerialException:
-        print("Stim board startup error, trying again...")
-        time.sleep(2)
-        stim_board = serial.Serial(stim_board_port, baud_rate, timeout=timeout)
-        time.sleep(2)
-        stim_board.write(b's')
-
-    return stim_board
-
+config_path = r"C:\dev\projects\head_sensor_config.json"
+exit_key = 'esc' 
 
 def main():
+
+    with open(config_path, "r") as file:
+        config = json.load(file)
+
+    python_exe = config.get("PYTHON_PATH")
+    timer_path = config.get("TIMER_SCRIPT")
+    head_sensor_script = config.get("HEAD_SENSOR_SCRIPT")
+    arduino_daq_path = config.get("SERIAL_LISTEN")
+
     # Prompt user for mouse ID
     output_folder = r"C:\Users\Tripodi Group\Videos\Head_sensor_output"
-    mouse_id = input("Enter mouse ID: ")
+
+    mouse_id = "test1"
+    # mouse_id = "test2"
 
     # Metadata:
     set_laser_power = input("Enter laser power (computer value) (mW): ")
     brain_laser_power = input("Enter laser power (at brain) (mW): ")
-    sync_signal_OEAB_channel = 7
-    laser_OEAB_channel = 8
+    # sync_signal_OEAB_channel = 7
+    # laser_OEAB_channel = 8
     stim_times = [10, 25, 50, 100, 150, 200, 250, 500, 1000]
     num_cycles = 20
     stim_delay = "10s"
@@ -48,19 +45,22 @@ def main():
     foldername = f"{date_time}_{mouse_id}"
     output_path = os.path.join(output_folder, foldername)
     os.mkdir(output_path)
-    input("Folder created. Start OEAB recording in this folder and press Enter to start the experiment.")
-    #start camera:
 
-    # camera_process = subprocess.Popen([
-    #     'python', camera_script,
-    #     '--id', mouse_id,
-    #     '--date', date_time,
-    #     '--path', output_path
-    # ])
+    # start arduinoDAQ
+    arduino_DAQ_process = subprocess.Popen([
+        python_exe, arduino_daq_path,
+        '--id', mouse_id,
+        '--date', date_time,
+        '--path', output_path
+    ])
+    # wait for daq to start:
+    countdown_timer(10, message="Starting ArduinoDAQ")
+
+    timer = subprocess.Popen([python_exe, timer_path], shell=False)
 
     # Start the head sensor script with the provided arguments
     head_sensor_process = subprocess.Popen([
-        'python', head_sensor_script,
+        python_exe, head_sensor_script,
         '--id', mouse_id,
         '--date', date_time,
         '--path', output_path
@@ -68,33 +68,27 @@ def main():
     print("Head sensor script started.")
     time.sleep(10)
     
-    # Start the stim board
-    stim_board = start_stim_board()
-    print("Stim board started.\n")
-    
     # Listen for completion message from stim board
     while True:
-        if stim_board.in_waiting > 0:
-            message = stim_board.readline().decode('utf-8').strip()
-            print(message)
-            if message == 'e':
-                print("Stim program completed. Press m to finish program.")
-                stim_board.write(b'e')
-                time.sleep(1)
-                stim_board.close()
-                break
-        if keyboard.is_pressed('m'):
+        if keyboard.is_pressed(exit_key):
             print("User requested to stop the program.")
-            stim_board.write(b'e')
+            # stim_board.write(b'e')
             time.sleep(1)
-            stim_board.close()
+            # stim_board.close()
             break
             
     
     # Wait for the head sensor script to finish
 
+    while True:
+        if check_for_signal_file(output_path):
+            # stim_board.write(b'e')  # Uncomment if needed
+            time.sleep(1)
+            # stim_board.close()  # Uncomment if needed
+            break
+        time.sleep(0.5)  # Check for the signal file every 0.5 seconds
+
     print("Head sensor script stopped.\n")
-    print("OK to stop OEAB recording.")
 
     end_time = time.perf_counter()
 
@@ -103,8 +97,8 @@ def main():
     metadata = {'mouse_id': mouse_id,
                 'set_laser_power_mW': set_laser_power,
                 'brain_laser_power_mW': brain_laser_power,
-                'sync_signal_OEAB_channel': sync_signal_OEAB_channel,
-                'laser_OEAB_channel': laser_OEAB_channel,
+                # 'sync_signal_OEAB_channel': sync_signal_OEAB_channel,
+                # 'laser_OEAB_channel': laser_OEAB_channel,
                 'stim_times_ms': stim_times,
                 'num_cycles': num_cycles,
                 'stim_delay': stim_delay,
@@ -114,7 +108,12 @@ def main():
         json.dump(metadata, f, indent=4)
 
     head_sensor_process.wait()
-    # camera_process.wait()
+    arduino_DAQ_process.wait()
+    timer.wait()
+
+    delete_signal_files(output_path)
+
+    # send signal from head sensor and camera that recording has stopped, to stop arduinoDAQ.
 
 if __name__ == "__main__":
     main()

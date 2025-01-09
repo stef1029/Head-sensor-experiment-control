@@ -8,10 +8,14 @@ import os
 import keyboard
 import h5py
 import json
+import sys
+from utils import create_end_signal
 
 head_sensor_port = 'COM24'
 baud_rate = 57600
 timeout = 2
+
+exit_key = 'esc'
 
 # Boundary bytes
 START_BOUNDARY = b'\x02'
@@ -110,70 +114,109 @@ def zero_values(timeout=1):
 
 def read_sensor(initial_yaw, initial_roll, initial_pitch):
     print("Reading sensor data...")
-    
+
+    # Set up counters & buffers
     start_time = time.time()
     message_count = 0
     full_messages = 0
     error_messages = []
 
+    # This will collect incoming bytes until we find our delimiter
+    packet_buffer = bytearray()
+
+    # Two-byte delimiter to mark the end of each valid 16-byte frame
+    DELIMITER = b'\x03\x02'  
+    
     while True:
         try:
-            # Read until start boundary is found
-            if head_sensor.read() == START_BOUNDARY:
-                message = bytearray()
-                while True:
-                    byte = head_sensor.read(1)
-                    if byte == END_BOUNDARY:
-                        break
-                    message.extend(byte)
+            # Read a single byte at a time (you can read bigger chunks if desired)
+            chunk = head_sensor.read(1)
+            if not chunk:
+                # No byte was actually read; just keep looping
+                continue
 
-                if len(message) == 16:
-                    message_id, yaw, roll, pitch = parse_binary_message(message)
-                    # print(f"Raw Yaw: {yaw}, Roll: {roll}, Pitch: {pitch}")  # Debug print
+            # Accumulate the new byte(s) into our buffer
+            packet_buffer.extend(chunk)
 
-                    if message_id is not None and yaw is not None and roll is not None and pitch is not None:
-                        # Zero the values
-                        yaw -= initial_yaw
-                        roll -= initial_roll
+            # Look for one or more occurrences of the delimiter in our buffer
+            idx = packet_buffer.find(DELIMITER)
+            while idx != -1:
+                # "frame" is everything before the delimiter
+                frame = packet_buffer[:idx]
+                
+                # Remove "frame + delimiter" from the buffer
+                del packet_buffer[:idx + len(DELIMITER)]
+
+                # Only parse if the frame is exactly 16 bytes
+                if len(frame) == 16:
+                    message_id, yaw, roll, pitch = parse_binary_message(frame)
+                    if (message_id is not None 
+                        and yaw is not None 
+                        and roll is not None 
+                        and pitch is not None):
+                        # Adjust the raw values based on initial offsets
+                        yaw   -= initial_yaw
+                        roll  -= initial_roll
                         pitch -= initial_pitch
 
-                        # Apply the specified axis rotation transformation
+                        # Apply rotation as before
                         yaw, roll, pitch = apply_rotation(yaw, roll, pitch, rotation_matrix)
 
-                        # Store the data with the receipt timestamp
+                        # Record data and print
                         current_time = time.time() - start_time
                         message_ids.append(message_id)
                         yaw_data.append(yaw)
                         roll_data.append(roll)
                         pitch_data.append(pitch)
                         timestamps.append(current_time)
+
                         message_count += 1
                         full_messages += 1
 
-                        print(UP, end = CLEAR)
-                        print(f"Timestamp: {current_time:.2f} s, Message ID: {message_id}, Yaw: {yaw:.2f}, Roll: {roll:.2f}, Pitch: {pitch:.2f}")
+                        print(f"Timestamp: {current_time:.2f}s, "
+                              f"Message ID: {message_id}, "
+                              f"Yaw: {yaw:.2f}, Roll: {roll:.2f}, Pitch: {pitch:.2f}")
                     else:
-                        error_messages.append([message_count, str(message)])
-                        print(f"Error: Parsed values are None (message count {message_count})")
+                        error_messages.append([message_count, str(frame)])
+                        print(f"Error: Parsed values are None (message #{message_count})")
+                else:
+                    # If it’s not 16 bytes, it’s not a valid frame; skip it
+                    error_messages.append([message_count, f"Invalid frame size: {len(frame)}"])
+                    # Optionally, you could log or print something here
+                
+                # Check if there’s another delimiter *still* in the buffer
+                idx = packet_buffer.find(DELIMITER)
+
         except serial.SerialException as e:
             print(f"Serial error: {e}, skipping message")
-            error_messages.append([message_count, str(message)])
+            error_messages.append([message_count, f"SerialException: {e}"])
         except UnicodeDecodeError as e:
-            print(f"Decoding error: {e}, skipping line")
-            error_messages.append([message_count, str(message)])
+            print(f"Decoding error: {e}, skipping message")
+            error_messages.append([message_count, f"UnicodeError: {e}"])
 
-        if keyboard.is_pressed("m"):
+        # Press 'esc' to end
+        if keyboard.is_pressed(exit_key):
             head_sensor.write(b'e')  # send end signal to Arduino
             break
 
+    # After the loop ends, compute stats
     end_time = time.time()
     duration = end_time - start_time
     message_rate = message_count / duration if duration > 0 else 0
 
-    print(f"Message counter: {message_count}, full messages: {full_messages}, reliability = {(full_messages/message_count)*100 if message_count > 0 else 0}%)")
-    print(f"Time taken: {duration} seconds, {message_count} messages, = {message_rate} messages per second")
+    print(f"Message counter: {message_count}")
+    print(f"Full messages: {full_messages}, reliability: "
+          f"{(full_messages/message_count)*100 if message_count > 0 else 0:.2f}%")
+    print(f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
 
-    save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_messages, message_count, duration, error_messages)
+    global output_path
+    create_end_signal(output_path)
+
+    # Save everything
+    save_data(
+        message_ids, yaw_data, roll_data, pitch_data, timestamps,
+        full_messages, message_count, duration, error_messages
+    )
 
     head_sensor.close()
 
@@ -286,64 +329,55 @@ def retry_connection():
 
 def main():
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
+    
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
     args = parser.parse_args()
 
-    global output_path
-    if args.id is not None:
-        mouse_ID = args.id
-    else:
-        mouse_ID = "NoID"
-    
-    if args.date is not None:
-        date_time = args.date
-    else:
-        date_time = f"{datetime.now():%y%m%d_%H%M%S}"
-    
-    foldername = f"{date_time}_{mouse_ID}"
-    if args.path is not None:
-        output_path = args.path
-    else:
-        output_path = os.path.join(os.getcwd(), foldername)
-        os.mkdir(output_path)
+    # Only run code below if run from command line with args:
+    if len(sys.argv) > 1:
 
-    global save_file_name
-    save_file_name = f"{foldername}-Head_sensor"
+        global output_path
+        if args.id is not None:
+            mouse_ID = args.id
+        else:
+            mouse_ID = "NoID"
+        
+        if args.date is not None:
+            date_time = args.date
+        else:
+            date_time = f"{datetime.now():%y%m%d_%H%M%S}"
+        
+        foldername = f"{date_time}_{mouse_ID}"
+        if args.path is not None:
+            output_path = args.path
+        else:
+            output_path = os.path.join(os.getcwd(), foldername)
+            os.mkdir(output_path)
 
-    # Initialize serial connections
-    global head_sensor
-    try:
-        head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
-    except serial.SerialException as e:
-        print(f"Serial error: {e}, retrying connection")
-        time.sleep(1)
-        head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
-    time.sleep(2)  # Give some time for the connection to settle
-    head_sensor.reset_input_buffer()
+        global save_file_name
+        save_file_name = f"{foldername}-Head_sensor"
 
-    # Send start command to Arduino
-    head_sensor.write(b's')
-    head_sensor.flush()  # Ensure the command is transmitted
-
-    # Zero the initial values
-    initial_yaw, initial_roll, initial_pitch = zero_values()
-    if np.isnan(initial_yaw):
-        print("Sensor startup failed, trying again...")
-        head_sensor.close()
-        time.sleep(2)
-        head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+        # Initialize serial connections
+        global head_sensor
+        try:
+            head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+        except serial.SerialException as e:
+            print(f"Serial error: {e}, retrying connection")
+            time.sleep(1)
+            head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
         time.sleep(2)  # Give some time for the connection to settle
         head_sensor.reset_input_buffer()
 
         # Send start command to Arduino
         head_sensor.write(b's')
         head_sensor.flush()  # Ensure the command is transmitted
-        initial_yaw, initial_roll, initial_pitch = zero_values()
 
+        # Zero the initial values
+        initial_yaw, initial_roll, initial_pitch = zero_values()
         if np.isnan(initial_yaw):
-            print("Sensor startup failed again, trying again again...")
+            print("Sensor startup failed, trying again...")
             head_sensor.close()
             time.sleep(2)
             head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
@@ -355,10 +389,26 @@ def main():
             head_sensor.flush()  # Ensure the command is transmitted
             initial_yaw, initial_roll, initial_pitch = zero_values()
 
-    # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
+            if np.isnan(initial_yaw):
+                print("Sensor startup failed again, trying again again...")
+                head_sensor.close()
+                time.sleep(2)
+                head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+                time.sleep(2)  # Give some time for the connection to settle
+                head_sensor.reset_input_buffer()
 
-    # Read sensor data
-    read_sensor(initial_yaw, initial_roll, initial_pitch)
+                # Send start command to Arduino
+                head_sensor.write(b's')
+                head_sensor.flush()  # Ensure the command is transmitted
+                initial_yaw, initial_roll, initial_pitch = zero_values()
+
+        # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
+
+        # Read sensor data
+        read_sensor(initial_yaw, initial_roll, initial_pitch)
+
+    else:
+        calibrate()
 
 if __name__ == "__main__":
     # calibrate()
