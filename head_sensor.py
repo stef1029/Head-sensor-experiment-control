@@ -173,9 +173,9 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch):
                         message_count += 1
                         full_messages += 1
 
-                        print(f"Timestamp: {current_time:.2f}s, "
-                              f"Message ID: {message_id}, "
-                              f"Yaw: {yaw:.2f}, Roll: {roll:.2f}, Pitch: {pitch:.2f}")
+                        # print(f"Timestamp: {current_time:.2f}s, "
+                        #       f"Message ID: {message_id}, "
+                        #       f"Yaw: {yaw:.2f}, Roll: {roll:.2f}, Pitch: {pitch:.2f}")
                     else:
                         error_messages.append([message_count, str(frame)])
                         print(f"Error: Parsed values are None (message #{message_count})")

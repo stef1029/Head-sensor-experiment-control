@@ -25,7 +25,7 @@ def main():
     arduino_daq_path = config.get("SERIAL_LISTEN")
 
     # Prompt user for mouse ID
-    output_folder = r"C:\Users\Tripodi Group\Videos\Head_sensor_output"
+    output_folder = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output"
 
     mouse_id = "test1"
     # mouse_id = "test2"
