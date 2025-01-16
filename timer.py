@@ -2,6 +2,7 @@ import tkinter as tk
 import time
 import threading
 import keyboard
+from colorama import init, Fore, Back, Style
 
 class TimerApp:
     def __init__(self, root):
@@ -34,3 +35,4 @@ def run_timer():
 
 if __name__ == "__main__":
     run_timer()
+    print(Fore.MAGENTA + "Timer:" + Style.RESET_ALL + "Timer window stopped.")

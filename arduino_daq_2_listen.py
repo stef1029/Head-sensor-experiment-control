@@ -15,6 +15,8 @@ from collections import deque
 import traceback
 import threading
 import tkinter as tk
+from colorama import init, Fore, Style
+init()
 
 exit_key = "esc"
 
@@ -102,7 +104,7 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
     elif rig == "4":
         COM_PORT = "COM16"
     elif rig == "5":
-        COM_PORT = "COM23"
+        COM_PORT = "COM18"
     else:
         raise ValueError("Rig number not recognised (comport)")
 
@@ -183,7 +185,7 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
                 backup_buffer.append([original_message_ID, original_message, current_time])
 
                 # print message as binary number: ----- SERIAL MONITOR -----
-                print(f"Time: {current_time:.6f} ID: {original_message_ID:032b} Data: {original_message:040b}")
+                # print(f"Time: {current_time:.6f} ID: {original_message_ID:032b} Data: {original_message:040b}")
 
                 full_messages += 1
             else:
@@ -203,7 +205,8 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
     end = time.perf_counter()
 
     # print("Signal file detected, stopping loop.")
-    ser.write(b"e")  # Send end signal as a byte string
+    for i in range(3):
+        ser.write(b"e")  # Send end signal as a byte string
 
     # Call the save function
     save_to_hdf5_and_json(foldername, output_path, mouse_ID, date_time, list(messages_from_arduino), message_counter, full_messages, start, end, error_messages)
@@ -248,7 +251,7 @@ def save_to_hdf5_and_json(foldername, output_path, mouse_ID, date_time, messages
     except ZeroDivisionError:
         reliability = 0
 
-    print(f"Reliability: {reliability:.2f}%")
+    # print(f"Reliability: {reliability:.2f}%")
 
     binary_list = [''.join(str(bit) for bit in row) for row in channel_data_array]
 
@@ -331,6 +334,8 @@ def main():
     except Exception as e:
         print("Error in main function")
         traceback.print_exc()
+
+    print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "ArduinoDAQ finished.")
 
 if __name__ == '__main__':
     main()

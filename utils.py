@@ -1,12 +1,14 @@
 import time
 import keyboard
 import os
+from colorama import init, Fore, Back, Style
+init()
 
 # Terminal control sequences (to move cursor up and clear the line)
 UP = "\033[1A"
 CLEAR = "\x1b[2K"
 
-def countdown_timer(seconds, message="Time remaining", break_on_key=None):
+def countdown_timer(seconds, message="Time remaining", break_on_key=None, print_message=True):
     """
     Displays a countdown timer in the command line.
 
@@ -23,13 +25,15 @@ def countdown_timer(seconds, message="Time remaining", break_on_key=None):
 
         # If time is up, exit the loop
         if remaining_time <= 0:
-            print(UP, end=CLEAR)
-            print(f"{message}: 0.0 seconds")
+            if print_message:
+                print(UP, end=CLEAR)
+                print(f"{message}: 0.0 seconds")
             break
 
         # Display the countdown timer
-        print(UP, end=CLEAR)
-        print(f"{message}: {round(remaining_time, 1)} seconds")
+        if print_message:
+            print(UP, end=CLEAR)
+            print(Fore.CYAN + f"{message}: " + Style.RESET_ALL + f"{round(remaining_time, 1)} seconds")
 
         # If break_on_key is specified and pressed, exit the countdown
         if break_on_key and keyboard.is_pressed(break_on_key):

@@ -10,6 +10,11 @@ import h5py
 import json
 import sys
 from utils import create_end_signal
+import asyncio
+import threading
+from colorama import init, Fore, Back, Style
+
+init()
 
 head_sensor_port = 'COM24'
 baud_rate = 57600
@@ -72,7 +77,7 @@ def parse_binary_message(message):
             ypr = struct.unpack('fff', message[4:16])
             return message_id, ypr[0], ypr[1], ypr[2]  # yaw, roll, pitch order
     except struct.error as e:
-        print(f"Error parsing binary message: {e}, message: {message}")
+        print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Error parsing binary message: {e}, message: {message}")
     return None, None, None, None
 
 def apply_rotation(yaw, roll, pitch, rotation_matrix):
@@ -85,7 +90,7 @@ def apply_rotation(yaw, roll, pitch, rotation_matrix):
 
 
 def zero_values(timeout=1):
-    print("Zeroing initial values...")
+    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Zeroing initial values...")
     start_time = time.time()
     final_values = None
     global head_sensor
@@ -106,63 +111,75 @@ def zero_values(timeout=1):
                     if message_id is not None and yaw is not None and roll is not None and pitch is not None:
                         final_values = (yaw, roll, pitch)
         except serial.SerialException as e:
-            print(f"Serial error: {e}, skipping message")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, skipping message")
         except UnicodeDecodeError as e:
-            print(f"Decoding error: {e}, skipping line")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Decoding error: {e}, skipping line")
 
     return final_values
 
+async def check_stim_signal(file_path, stop_event):
+    def esc_key_monitor():
+        keyboard.wait('esc')
+        if not stop_event.is_set():
+            stop_event.set()
+
+    # Start a separate thread to monitor for the ESC key press
+    esc_thread = threading.Thread(target=esc_key_monitor, daemon=True)
+    esc_thread.start()
+
+    try:
+        while not stop_event.is_set():
+            if os.path.exists(file_path):
+                stop_event.set()
+                head_sensor.write(b'e')
+                break
+            await asyncio.sleep(1)  # Check every second
+    finally:
+        keyboard.unhook_all()
+
 def read_sensor(initial_yaw, initial_roll, initial_pitch):
-    print("Reading sensor data...")
+    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Reading sensor data...")
 
     # Set up counters & buffers
     start_time = time.time()
     message_count = 0
     full_messages = 0
     error_messages = []
-
-    # This will collect incoming bytes until we find our delimiter
     packet_buffer = bytearray()
+    DELIMITER = b'\x03\x02'
 
-    # Two-byte delimiter to mark the end of each valid 16-byte frame
-    DELIMITER = b'\x03\x02'  
-    
-    while True:
+    # Create event loop and stop event
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    stop_event = asyncio.Event()
+
+    # Start signal file check task
+    stim_signal_path = os.path.join(output_path, "stim_complete.signal")
+    loop.create_task(check_stim_signal(stim_signal_path, stop_event))
+
+    while not stop_event.is_set():
         try:
-            # Read a single byte at a time (you can read bigger chunks if desired)
             chunk = head_sensor.read(1)
             if not chunk:
-                # No byte was actually read; just keep looping
                 continue
 
-            # Accumulate the new byte(s) into our buffer
             packet_buffer.extend(chunk)
-
-            # Look for one or more occurrences of the delimiter in our buffer
             idx = packet_buffer.find(DELIMITER)
+            
             while idx != -1:
-                # "frame" is everything before the delimiter
                 frame = packet_buffer[:idx]
-                
-                # Remove "frame + delimiter" from the buffer
                 del packet_buffer[:idx + len(DELIMITER)]
 
-                # Only parse if the frame is exactly 16 bytes
                 if len(frame) == 16:
                     message_id, yaw, roll, pitch = parse_binary_message(frame)
-                    if (message_id is not None 
-                        and yaw is not None 
-                        and roll is not None 
-                        and pitch is not None):
-                        # Adjust the raw values based on initial offsets
-                        yaw   -= initial_yaw
-                        roll  -= initial_roll
+                    if (message_id is not None and yaw is not None 
+                        and roll is not None and pitch is not None):
+                        yaw -= initial_yaw
+                        roll -= initial_roll
                         pitch -= initial_pitch
 
-                        # Apply rotation as before
                         yaw, roll, pitch = apply_rotation(yaw, roll, pitch, rotation_matrix)
 
-                        # Record data and print
                         current_time = time.time() - start_time
                         message_ids.append(message_id)
                         yaw_data.append(yaw)
@@ -172,44 +189,35 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch):
 
                         message_count += 1
                         full_messages += 1
-
-                        # print(f"Timestamp: {current_time:.2f}s, "
-                        #       f"Message ID: {message_id}, "
-                        #       f"Yaw: {yaw:.2f}, Roll: {roll:.2f}, Pitch: {pitch:.2f}")
-                    else:
-                        error_messages.append([message_count, str(frame)])
-                        print(f"Error: Parsed values are None (message #{message_count})")
                 else:
-                    # If it’s not 16 bytes, it’s not a valid frame; skip it
-                    error_messages.append([message_count, f"Invalid frame size: {len(frame)}"])
-                    # Optionally, you could log or print something here
-                
-                # Check if there’s another delimiter *still* in the buffer
+                    error_messages.append([message_count, str(frame)])
+
                 idx = packet_buffer.find(DELIMITER)
 
         except serial.SerialException as e:
-            print(f"Serial error: {e}, skipping message")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, skipping message")
             error_messages.append([message_count, f"SerialException: {e}"])
         except UnicodeDecodeError as e:
-            print(f"Decoding error: {e}, skipping message")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Decoding error: {e}, skipping message")
             error_messages.append([message_count, f"UnicodeError: {e}"])
 
-        # Press 'esc' to end
+        # Check for manual stop
         if keyboard.is_pressed(exit_key):
-            head_sensor.write(b'e')  # send end signal to Arduino
+            head_sensor.write(b'e')
             break
+
+        loop.run_until_complete(asyncio.sleep(0))
 
     # After the loop ends, compute stats
     end_time = time.time()
     duration = end_time - start_time
     message_rate = message_count / duration if duration > 0 else 0
 
-    print(f"Message counter: {message_count}")
-    print(f"Full messages: {full_messages}, reliability: "
+    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Message counter: {message_count}")
+    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Full messages: {full_messages}, reliability: "
           f"{(full_messages/message_count)*100 if message_count > 0 else 0:.2f}%")
-    print(f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
+    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
 
-    global output_path
     create_end_signal(output_path)
 
     # Save everything
@@ -243,7 +251,7 @@ def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_mes
         f.create_dataset('roll_data', data=roll_data)
         f.create_dataset('pitch_data', data=pitch_data)
         f.create_dataset('timestamps', data=timestamps)
-        print("Data saved to HDF5 file")
+        print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Data saved to HDF5 file")
 
 
 def calibrate():
@@ -299,12 +307,14 @@ def calibrate():
                 continue
 
         if time.perf_counter() - start_time > calibration_time:
-            head_sensor.write(b'#ot')
-            head_sensor.write(b'e')
+            for i in range(3):
+                head_sensor.write(b'#ot')
+                head_sensor.write(b'e')
             break
         if keyboard.is_pressed('q'):
-            head_sensor.write(b'#ot')
-            head_sensor.write(b'e')
+            for i in range(3):
+                head_sensor.write(b'#ot')
+                head_sensor.write(b'e')
             break
 
     print("Calibration complete.")
@@ -364,7 +374,7 @@ def main():
         try:
             head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
         except serial.SerialException as e:
-            print(f"Serial error: {e}, retrying connection")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, retrying connection")
             time.sleep(1)
             head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
         time.sleep(2)  # Give some time for the connection to settle
@@ -377,7 +387,7 @@ def main():
         # Zero the initial values
         initial_yaw, initial_roll, initial_pitch = zero_values()
         if np.isnan(initial_yaw):
-            print("Sensor startup failed, trying again...")
+            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
             time.sleep(2)
             head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
@@ -390,7 +400,7 @@ def main():
             initial_yaw, initial_roll, initial_pitch = zero_values()
 
             if np.isnan(initial_yaw):
-                print("Sensor startup failed again, trying again again...")
+                print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
                 head_sensor.close()
                 time.sleep(2)
                 head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
@@ -407,9 +417,12 @@ def main():
         # Read sensor data
         read_sensor(initial_yaw, initial_roll, initial_pitch)
 
+        
+
     else:
         calibrate()
 
 if __name__ == "__main__":
     # calibrate()
     main()
+    print(Fore.BLUE + "Head Sensor: " + Style.RESET_ALL + "Head sensor stopped.")
