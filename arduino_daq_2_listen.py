@@ -22,47 +22,43 @@ exit_key = "esc"
 
 test = False
 
-class StatusWindow:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Script Status")
-        self.root.geometry("300x100")
-        self.status_label = tk.Label(self.root, text="Initializing...", font=("Helvetica", 14))
-        self.status_label.pack(expand=True)
-        self.update_flag = True
 
-    def update_status(self, message):
-        if self.update_flag:
-            self.status_label.config(text=message)
-            self.root.update()
-
-    def close_window(self):
-        self.update_flag = False
-        self.root.destroy()
-
-    def run(self):
-        self.root.mainloop()
-
-async def check_signal_files(file_path_1, stop_event):
+async def check_signal_files(output_path, rig_number, stop_event):
     if test:
         def esc_key_monitor():
-            keyboard.wait('esc')  # Wait until the ESC key is pressed
+            keyboard.wait('esc')
             if not stop_event.is_set():
-                stop_event.set()  # Signal to stop the loop
+                stop_event.set()
 
-        # Start a separate thread to monitor for the ESC key press
         esc_thread = threading.Thread(target=esc_key_monitor, daemon=True)
         esc_thread.start()
 
     try:
+        behaviour_signal = False
+        camera_signal = False
+        
         while not stop_event.is_set():
-            if os.path.exists(file_path_1):
-                stop_event.set()  # Signal to stop the loop
+            # Check for behaviour control end signal
+            if os.path.exists(output_path / "end_signal.signal"):
+                behaviour_signal = True
+                print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received behaviour control end signal.")
+            
+            # Check for camera completion signal
+            camera_signal_path = output_path / f"rig_{4}_camera_finished.signal"
+            if os.path.exists(camera_signal_path):
+                camera_signal = True
+                print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received camera end signal.")
+            
+            # Only stop if we've received both signals
+            if behaviour_signal and camera_signal:
+                # print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received all end signals. Stopping recording.")
+                stop_event.set()
                 break
+                
             await asyncio.sleep(1)  # Check every 1s
+            
     finally:
         if test:
-            # Clean up the keyboard hooks if necessary
             keyboard.unhook_all()
 
 
@@ -107,7 +103,7 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
         COM_PORT = "COM18"
     else:
         raise ValueError("Rig number not recognised (comport)")
-
+    
     try:
         ser = serial.Serial(COM_PORT, 115200, timeout = 1)  # open serial port
         time.sleep(3)
@@ -143,7 +139,7 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
 
     # Start the task to check for signal file asynchronously with error handling
     try:
-        asyncio.create_task(check_signal_files(signal_file_path, stop_event))
+        asyncio.create_task(check_signal_files(output_path, rig, stop_event))
     except Exception as e:
         print(f"Error while starting signal file check task: {e}")
 
@@ -223,7 +219,7 @@ def save_to_hdf5_and_json(foldername, output_path, mouse_ID, date_time, messages
         "SENSOR5", "SENSOR2", "SENSOR4", "SENSOR3", "BUZZER4", "LED_3", "LED_4",
         "BUZZER3", "BUZZER5", "LED_2", "LED_5", "BUZZER2", "BUZZER6", "LED_1",
         "LED_6", "BUZZER1", "VALVE4", "VALVE3", "VALVE5", "VALVE2", "VALVE6",
-        "VALVE1", "GO_CUE", "NOGO_CUE", "CAMERA", "SCALES"
+        "VALVE1", "GO_CUE", "NOGO_CUE", "CAMERA_SYNC", "HEADSENSOR_SYNC", "LASER_SYNC"
     )
 
     num_channels = len(channel_indices)

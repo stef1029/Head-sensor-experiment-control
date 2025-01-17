@@ -13,8 +13,9 @@ from utils import create_end_signal
 import asyncio
 import threading
 from colorama import init, Fore, Back, Style
-
 init()
+
+import angle_display_window as adw
 
 head_sensor_port = 'COM24'
 baud_rate = 57600
@@ -137,7 +138,7 @@ async def check_stim_signal(file_path, stop_event):
     finally:
         keyboard.unhook_all()
 
-def read_sensor(initial_yaw, initial_roll, initial_pitch):
+def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display):
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Reading sensor data...")
 
     # Set up counters & buffers
@@ -187,6 +188,8 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch):
                         pitch_data.append(pitch)
                         timestamps.append(current_time)
 
+                        adw.update_display_safe(angle_display, yaw, roll, pitch)
+
                         message_count += 1
                         full_messages += 1
                 else:
@@ -225,7 +228,8 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch):
         message_ids, yaw_data, roll_data, pitch_data, timestamps,
         full_messages, message_count, duration, error_messages
     )
-
+    
+    angle_display.close()
     head_sensor.close()
 
 def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_messages, message_count, duration, error_messages):
@@ -338,6 +342,19 @@ def retry_connection():
 
 
 def main():
+
+    angle_display = adw.AngleDisplay()
+
+    # Create and start the display thread
+    def run_display():
+        try:
+            angle_display.root.mainloop()
+        except Exception as e:
+            print(f"Display error: {e}")
+            
+    display_thread = threading.Thread(target=run_display, daemon=True)
+    display_thread.start()
+
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
     
     parser.add_argument('--id', type=str, help='mouse ID')
@@ -414,13 +431,21 @@ def main():
 
         # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
 
-        # Read sensor data
-        read_sensor(initial_yaw, initial_roll, initial_pitch)
+        def sensor_thread():
+            read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display)
 
+        # Start sensor reading in a separate thread
+        sensor_thread = threading.Thread(target=sensor_thread, daemon=True)
+        sensor_thread.start()
         
-
+        # Run Tkinter main loop in the main thread
+        try:
+            angle_display.root.mainloop()
+        except:
+            pass
     else:
         calibrate()
+
 
 if __name__ == "__main__":
     # calibrate()

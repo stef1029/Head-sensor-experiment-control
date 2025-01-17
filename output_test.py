@@ -2,6 +2,30 @@ import json
 import sys
 from pathlib import Path
 
+def print_section_lengths(data, section_name):
+    """
+    Print lengths of arrays in a specific section of the JSON data.
+    
+    Args:
+        data (dict): Section of JSON data containing arrays
+        section_name (str): Name of the section being processed
+    """
+    if data is None:
+        print(f"{section_name} data not found or is None")
+        return
+        
+    print(f"\n{section_name} Data:")
+    print("-" * 40)
+    
+    for key, value in data.items():
+        if isinstance(value, list):
+            print(f"{key:25} length: {len(value)}")
+        elif isinstance(value, dict):
+            # Handle nested dictionaries if they exist
+            for sub_key, sub_value in value.items():
+                if isinstance(sub_value, list):
+                    print(f"{key}.{sub_key:20} length: {len(sub_value)}")
+
 def demo_print_lengths(json_file):
     """
     Reads the synced JSON file and prints out the lengths
@@ -17,26 +41,23 @@ def demo_print_lengths(json_file):
     with open(json_file, 'r') as f:
         data = json.load(f)
 
-    # List of keys in the JSON that store arrays.
-    # Modify these as needed for your actual JSON structure.
-    array_keys = [
-        "pulse_times",
-        "message_ids",
-        "yaw_data",
-        "roll_data",
-        "pitch_data",
-        "head_sensor_timestamps",
-        "synced_timestamps"
-    ]
-
-    # Print lengths for each key found
     print(f"Reading from: {json_file}")
-    for key in array_keys:
-        if key in data:
-            print(f"{key} length: {len(data[key])}")
-        else:
-            print(f"{key} not found in the JSON.")
+    
+    # Print session ID
+    print(f"Session ID: {data.get('session_id', 'Not found')}")
+    
+    # Print lengths for head sensor data
+    print_section_lengths(data.get('head_sensor'), "Head Sensor")
+    
+    # Print lengths for camera data
+    print_section_lengths(data.get('camera'), "Camera")
 
 if __name__ == "__main__":
-    output_json = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output\250114_161030_test1\250114_161030_test1_head_sensor_synced.json"
+    # Check if a file path was provided as command line argument
+    if len(sys.argv) > 1:
+        output_json = sys.argv[1]
+    else:
+        # Default path if none provided
+        output_json = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output\250116_174334_test1\250116_174334_test1_synced_data.json"
+    
     demo_print_lengths(output_json)

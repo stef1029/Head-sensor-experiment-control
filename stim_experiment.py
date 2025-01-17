@@ -39,6 +39,12 @@ def create_stim_signal(output_path):
     with open(signal_file, 'w') as f:
         f.write("Stim experiment complete")
 
+def stop_camera(output_path, cam_no):
+    """Create a signal file to stop the camera"""
+    signal_file = os.path.join(output_path, f"stop_camera_{cam_no}.signal")
+    with open(signal_file, 'w') as f:
+        f.write("Stop camera recording")
+
 def main():
     with open(config_path, "r") as file:
         config = json.load(file)
@@ -79,7 +85,7 @@ def main():
         '--path', output_path
     ])
     # Wait for daq to start:
-    countdown_timer(10, message="Starting ArduinoDAQ", print_message=False)
+    countdown_timer(10, message="Starting ArduinoDAQ")
 
     # Start camera tracking
     tracker_command = [
@@ -106,18 +112,19 @@ def main():
     ])
     print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Head sensor script started.")
 
-    countdown_timer(10, message="Starting laser control board", print_message=False)
+    countdown_timer(10, message="Starting laser control board")
 
     stim_board = start_stim_board()
     
     # Listen for completion message from stim board
     while True:
-        # check for e from stim board:
         if stim_board.in_waiting:
             if stim_board.read() == b'e':
                 print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Received stop signal from stim board.")
                 stim_board.close()
-                create_stim_signal(output_path)  # Create signal file
+                create_stim_signal(output_path)
+                # Add camera stop signal
+                stop_camera(output_path, 4)  # Use the same cam_no as in tracker_command
                 break
         if keyboard.is_pressed(exit_key):
             print("User requested to stop the program.")
@@ -126,7 +133,9 @@ def main():
             stim_board.write(b'e')
             time.sleep(1)
             stim_board.close()
-            create_stim_signal(output_path)  # Create signal file
+            create_stim_signal(output_path)
+            # Add camera stop signal
+            stop_camera(output_path, 4)  # Use the same cam_no as in tracker_command
             break
             
     
@@ -141,7 +150,7 @@ def main():
 
     end_time = time.perf_counter()
 
-    metadata_filename = os.path.join(output_path, "metadata.json")
+    metadata_filename = os.path.join(output_path, f"{foldername}_metadata.json")
 
     metadata = {'mouse_id': mouse_id,
                 'set_laser_power_mW': set_laser_power,
@@ -158,11 +167,13 @@ def main():
 
     head_sensor_process.wait()
     arduino_DAQ_process.wait()
+    camera_process.wait()
     timer.terminate()
+    head_sensor_process.terminate()
+    arduino_DAQ_process.terminate()
+    camera_process.terminate()
 
     delete_signal_files(output_path)
-
-    # send signal from head sensor and camera that recording has stopped, to stop arduinoDAQ.
 
 if __name__ == "__main__":
     main()

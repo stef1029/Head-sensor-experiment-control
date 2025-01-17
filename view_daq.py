@@ -2,41 +2,58 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_head_sensor_sync_signal(arduino_daq_h5_path, channel_name="CAMERA"):
+def plot_multiple_channels(arduino_daq_h5_path, channel_names):
     """
-    Plots the head sensor sync signal recorded by the ArduinoDAQ on a specified channel.
+    Plots multiple channels from the ArduinoDAQ data as separate subplots.
     
     Args:
         arduino_daq_h5_path (str): Path to the ArduinoDAQ .h5 file.
-        channel_name (str): Name of the channel storing the sync signal.
+        channel_names (list): List of channel names to plot.
     """
     # Open the HDF5 file
     with h5py.File(arduino_daq_h5_path, 'r') as daq_h5:
-        # Load the channel data and timestamps
-        camera_data = np.array(daq_h5['channel_data'][channel_name])
+        # Create figure with subplots
+        fig, axes = plt.subplots(len(channel_names), 1, figsize=(12, 3*len(channel_names)))
+        
+        # Get timestamps once
         daq_timestamps = np.array(daq_h5['timestamps'])
-
-    # Create the plot
-    plt.figure(figsize=(10, 5))
-    plt.plot(daq_timestamps, camera_data, label=f'Sync signal ({channel_name})')
+        
+        # Handle case of single channel (axes not being array)
+        if len(channel_names) == 1:
+            axes = [axes]
+        
+        # Plot each channel
+        for ax, channel in zip(axes, channel_names):
+            try:
+                channel_data = np.array(daq_h5['channel_data'][channel])
+                ax.plot(daq_timestamps, channel_data, label=channel)
+                ax.set_ylabel('Signal')
+                ax.legend(loc='upper right')
+                
+                # Only show x-label for bottom subplot
+                if ax == axes[-1]:
+                    ax.set_xlabel('Time (s)')
+            except KeyError:
+                ax.text(0.5, 0.5, f'Channel "{channel}" not found', 
+                       horizontalalignment='center',
+                       verticalalignment='center')
+                ax.set_ylabel('N/A')
     
-    # Decorate the plot
-    plt.title('ArduinoDAQ Head Sensor Sync Signal')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Signal')
-    plt.legend()
+    # Add overall title
+    plt.suptitle('ArduinoDAQ Signals')
     plt.tight_layout()
     plt.show()
 
 def main():
     # === Fill in these variables ===
     # Provide the path to your ArduinoDAQ .h5 file
-    arduino_daq_h5_path = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output\250114_154451_test1\250114_154451_test1-ArduinoDAQ.h5"
-    # Provide the channel name for the head sensor sync signal (default is "CAMERA")
-    channel_name = "CAMERA"
+    arduino_daq_h5_path = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output\250117_154915_test1\250117_154915_test1-ArduinoDAQ.h5"
+    
+    # List all channels you want to plot
+    channel_names = ["CAMERA_SYNC", "HEADSENSOR_SYNC", "LASER_SYNC"]  # Add or modify channels as needed
 
     # Call the plotting function
-    plot_head_sensor_sync_signal(arduino_daq_h5_path, channel_name)
+    plot_multiple_channels(arduino_daq_h5_path, channel_names)
 
 if __name__ == "__main__":
     main()
