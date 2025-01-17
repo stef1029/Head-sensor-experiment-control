@@ -9,15 +9,14 @@ import keyboard
 import h5py
 import json
 import sys
-from utils import create_end_signal
+from utils.utils import create_end_signal
 import asyncio
 import threading
 from colorama import init, Fore, Back, Style
 init()
 
-import angle_display_window as adw
+import utils.angle_display_window as adw
 
-head_sensor_port = 'COM24'
 baud_rate = 57600
 timeout = 2
 
@@ -228,7 +227,7 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display):
         message_ids, yaw_data, roll_data, pitch_data, timestamps,
         full_messages, message_count, duration, error_messages
     )
-    
+
     angle_display.close()
     head_sensor.close()
 
@@ -258,9 +257,9 @@ def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_mes
         print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Data saved to HDF5 file")
 
 
-def calibrate():
+def calibrate(port):
 
-    head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+    head_sensor = serial.Serial(port, baud_rate, timeout=timeout)
     time.sleep(2)  # Give some time for the connection to settle
     head_sensor.reset_input_buffer()
 
@@ -328,17 +327,6 @@ def calibrate():
 
     head_sensor.close()
 
-def retry_connection():
-
-    head_sensor.close()
-    head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
-    time.sleep(2)  # Give some time for the connection to settle
-    head_sensor.reset_input_buffer()
-
-    # Send start command to Arduino
-    head_sensor.write(b's')
-    head_sensor.flush()  # Ensure the command is transmitted
-    return head_sensor
 
 
 def main():
@@ -356,7 +344,7 @@ def main():
     display_thread.start()
 
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
-    
+    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')  # Add this line
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
@@ -389,11 +377,11 @@ def main():
         # Initialize serial connections
         global head_sensor
         try:
-            head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
         except serial.SerialException as e:
             print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, retrying connection")
             time.sleep(1)
-            head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
         time.sleep(2)  # Give some time for the connection to settle
         head_sensor.reset_input_buffer()
 
@@ -407,7 +395,7 @@ def main():
             print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
             time.sleep(2)
-            head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
             time.sleep(2)  # Give some time for the connection to settle
             head_sensor.reset_input_buffer()
 
@@ -420,7 +408,7 @@ def main():
                 print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
                 head_sensor.close()
                 time.sleep(2)
-                head_sensor = serial.Serial(head_sensor_port, baud_rate, timeout=timeout)
+                head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
                 time.sleep(2)  # Give some time for the connection to settle
                 head_sensor.reset_input_buffer()
 
@@ -444,7 +432,7 @@ def main():
         except:
             pass
     else:
-        calibrate()
+        calibrate(args.port)
 
 
 if __name__ == "__main__":

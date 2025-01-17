@@ -5,9 +5,9 @@ import h5py
 import traceback
 from pathlib import Path
 
-from video_processor import process_cohort_videos
-from cohort_folder_openfield import Cohort_folder_openfield
-from openfield_analysis_manager import Analysis_manager_openfield
+from utils.video_processor import process_cohort_videos
+from utils.cohort_folder_openfield import Cohort_folder_openfield
+from utils.openfield_analysis_manager import Analysis_manager_openfield
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
     # Run processing
     for session in sessions_to_process:
         processor = Analysis_manager_openfield(session)
-        
+
     print("Processing complete.")
 
 if __name__ == "__main__":

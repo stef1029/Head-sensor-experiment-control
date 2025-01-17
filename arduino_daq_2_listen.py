@@ -23,7 +23,7 @@ exit_key = "esc"
 test = False
 
 
-async def check_signal_files(output_path, rig_number, stop_event):
+async def check_signal_files(output_path, stop_event):
     if test:
         def esc_key_monitor():
             keyboard.wait('esc')
@@ -64,7 +64,7 @@ async def check_signal_files(output_path, rig_number, stop_event):
 
 
 
-async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None):
+async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, port=None):
 
     messages_from_arduino = deque()
     backup_buffer = deque()
@@ -89,20 +89,8 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
 
     backup_csv_path = output_path / f"{foldername}-backup.csv"
 
-    if rig is None:
-        COM_PORT = "COM2"
-    elif rig == "1":
-        COM_PORT = "COM12"
-    elif rig == "2":
-        COM_PORT = "COM18"
-    elif rig == "3":
-        COM_PORT = "COM17"
-    elif rig == "4":
-        COM_PORT = "COM16"
-    elif rig == "5":
-        COM_PORT = "COM18"
-    else:
-        raise ValueError("Rig number not recognised (comport)")
+
+    COM_PORT = port
     
     try:
         ser = serial.Serial(COM_PORT, 115200, timeout = 1)  # open serial port
@@ -122,24 +110,12 @@ async def listen(new_mouse_ID=None, new_date_time=None, new_path=None, rig=None)
     error_messages = []
 
     stop_event = asyncio.Event()
-    # if rig == "1":
-    #     signal_file_path = output_path/"rig_1_camera_finished.signal" 
-    # elif rig == "2":
-    #     signal_file_path = output_path/"rig_2_camera_finished.signal" 
-    # elif rig == "3":
-    #     signal_file_path = output_path/"rig_3_camera_finished.signal"
-    # elif rig == "4":
-    #     signal_file_path = output_path/"rig_4_camera_finished.signal"
-    # elif rig == "5":
-    #     signal_file_path = output_path/"rig_5_camera_finished.signal"
-    # else:
-    #     raise ValueError("Rig number not recognised (sigfile)")
     
     signal_file_path = output_path/"end_signal.signal"
 
     # Start the task to check for signal file asynchronously with error handling
     try:
-        asyncio.create_task(check_signal_files(output_path, rig, stop_event))
+        asyncio.create_task(check_signal_files(output_path, stop_event))
     except Exception as e:
         print(f"Error while starting signal file check task: {e}")
 
@@ -309,13 +285,13 @@ def main():
     --id: mouse ID (default: NoID)
     --date: date_time (default: current date_time)
     --path: path (default: current directory)
-    --rig: Rig number (default: set below)
+    --port: COM port (default: COM2)
     """
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
-    parser.add_argument('--rig', type=str, help='Rig number')
+    parser.add_argument('--port', type=str, default='COM2', help='COM port (e.g., COM2)')
     args = parser.parse_args()
 
     mouse_ID = args.id if args.id is not None else "NoID"
@@ -323,10 +299,9 @@ def main():
     path = args.path if args.path is not None else os.path.join(os.getcwd(), f"{date_time}_{mouse_ID}")
     if args.path is None:
         os.mkdir(path)
-    rig = args.rig if args.rig is not None else "5"
 
     try:
-        asyncio.run(listen(new_mouse_ID=mouse_ID, new_date_time=date_time, new_path=path, rig=rig))
+        asyncio.run(listen(new_mouse_ID=mouse_ID, new_date_time=date_time, new_path=path, port=args.port))
     except Exception as e:
         print("Error in main function")
         traceback.print_exc()
