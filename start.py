@@ -8,7 +8,7 @@ import json
 from colorama import init, Fore, Back, Style
 init()
 
-from utils.stim_experiment_class import ExperimentControl
+from utils.experiment_control_class import ExperimentControl
 
 if __name__ == "__main__":
     output_folder = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output"
