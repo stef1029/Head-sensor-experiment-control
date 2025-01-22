@@ -12,10 +12,13 @@ import sys
 from utils.utils import create_end_signal
 import asyncio
 import threading
+import re
 from colorama import init, Fore, Back, Style
 init()
 
 import utils.angle_display_window as adw
+from utils.calibrate_magnetometer import calibrate_magnetometer_header
+from head_sensor_calibration_ctrl import calibrate
 
 baud_rate = 57600
 timeout = 2
@@ -35,11 +38,6 @@ roll_data = []
 pitch_data = []
 timestamps = []
 
-# Define the rotation angle (in degrees)
-
-rotation_angle_degrees = 135  # Example: 45 degrees
-
-rotation_angle = np.radians(rotation_angle_degrees)  # Convert to radians
 
 # Function to create a rotation matrix based on the specified axis
 def create_rotation_matrix(axis, angle):
@@ -63,12 +61,6 @@ def create_rotation_matrix(axis, angle):
         ])
     else:
         raise ValueError("Axis must be 'yaw', 'pitch', or 'roll'")
-
-# Specify the axis for rotation ('yaw', 'pitch', or 'roll')
-rotation_axis = 'roll'  # Example: rotate around the yaw-axis
-
-# Create the rotation matrix
-rotation_matrix = create_rotation_matrix(rotation_axis, rotation_angle)
 
 def parse_binary_message(message):
     try:
@@ -137,7 +129,7 @@ async def check_stim_signal(file_path, stop_event):
     finally:
         keyboard.unhook_all()
 
-def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display):
+def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotation_matrix):
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Reading sensor data...")
 
     # Set up counters & buffers
@@ -177,6 +169,7 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display):
                         yaw -= initial_yaw
                         roll -= initial_roll
                         pitch -= initial_pitch
+
 
                         yaw, roll, pitch = apply_rotation(yaw, roll, pitch, rotation_matrix)
 
@@ -257,78 +250,6 @@ def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_mes
         print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Data saved to HDF5 file")
 
 
-def calibrate(port):
-
-    head_sensor = serial.Serial(port, baud_rate, timeout=timeout)
-    time.sleep(2)  # Give some time for the connection to settle
-    head_sensor.reset_input_buffer()
-
-    accelerometer_values = ""
-    magnetometer_values = ""
-    gyroscope_values = ""
-
-    # Send start command to Arduino
-    head_sensor.write(b's')
-    head_sensor.flush()  # Ensure the command is transmitted
-    head_sensor.write(b'#oc')  # Send the command to calibrate the sensor
-
-    input("Calibration mode. Hold sensor still in hand and press Enter to start.")
-    print("""Accelerometer calibration values. Very gently move sensor so that all axes are pointing up at one point.\n
-          Press 'Q' to freeze values and move onto next step.\n""")
-    head_sensor.write(b'#oc')  # Send the command to calibrate the sensor
-    # head_sensor.flush()
-    head_sensor.reset_input_buffer()
-    while True:
-        if head_sensor.in_waiting > 0:
-            message = head_sensor.readline().decode('utf-8').strip()
-            print(UP, end = CLEAR)
-            print(message)
-            accelerometer_values = message
-        if keyboard.is_pressed('q'):
-            head_sensor.write(b'#on')
-            break
-    
-    # input("")
-    
-
-    input("Lay sensor still on the table and do not touch. Then press Enter to start gyroscope calibration.")
-    print("""Gyroscope calibration values. Do not touch sensor. Press 'Q' to freeze values and finish calibration.\n""")
-
-    head_sensor.write(b'#on')
-    start_time = time.perf_counter()
-    calibration_time = 10
-    while True:
-        if head_sensor.in_waiting > 0:
-            message = head_sensor.readline().decode('utf-8').strip()
-            try:
-                values = [float(value.split(' ')[0]) for value in message.split('/')[2:]]
-                print(UP, end = CLEAR)
-                print(f"Time remaining: {round((start_time + calibration_time) - time.perf_counter(), 1)}, Values: {values}")
-                gyroscope_values = values
-            except ValueError:
-                print(f"Error parsing message: {message}")
-                continue
-
-        if time.perf_counter() - start_time > calibration_time:
-            for i in range(3):
-                head_sensor.write(b'#ot')
-                head_sensor.write(b'e')
-            break
-        if keyboard.is_pressed('q'):
-            for i in range(3):
-                head_sensor.write(b'#ot')
-                head_sensor.write(b'e')
-            break
-
-    print("Calibration complete.")
-    print("Now go to globals.h and input these values into the ACCEL_X_MIN and GYRO_AVERAGE_OFFSET_X bits.")
-    print(f"Accelerometer values: {accelerometer_values}")
-    print(f"Gyroscope values: X: '{gyroscope_values[0]}', Y: '{gyroscope_values[1]}', Z: '{gyroscope_values[2]}'")
-
-    head_sensor.close()
-
-
-
 def main():
 
     angle_display = adw.AngleDisplay()
@@ -344,10 +265,11 @@ def main():
     display_thread.start()
 
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
-    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')  # Add this line
+    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
+    parser.add_argument('--rotation', type=float, default=90, help='Rotation angle in degrees')  # Add rotation parameter
     args = parser.parse_args()
 
     # Only run code below if run from command line with args:
@@ -373,6 +295,11 @@ def main():
 
         global save_file_name
         save_file_name = f"{foldername}-Head_sensor"
+
+        rotation_angle_degrees = args.rotation
+        rotation_angle = np.radians(rotation_angle_degrees)
+        rotation_axis = 'roll' # effectively rotates around the yaw axis (leave as is)
+        rotation_matrix = create_rotation_matrix(rotation_axis, rotation_angle)
 
         # Initialize serial connections
         global head_sensor
@@ -420,7 +347,7 @@ def main():
         # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
 
         def sensor_thread():
-            read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display)
+            read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotation_matrix)
 
         # Start sensor reading in a separate thread
         sensor_thread = threading.Thread(target=sensor_thread, daemon=True)
@@ -436,6 +363,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # calibrate()
     main()
     print(Fore.BLUE + "Head Sensor: " + Style.RESET_ALL + "Head sensor stopped.")

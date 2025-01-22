@@ -6,8 +6,9 @@ import os
 from datetime import datetime
 import json
 from colorama import init, Fore, Back, Style
+import sys
 
-from utils.utils import countdown_timer, check_for_signal_file, delete_signal_files
+from utils import countdown_timer, check_for_signal_file, delete_signal_files
 
 init()
 
@@ -83,13 +84,12 @@ class ExperimentControl:
         with open(signal_file, 'w') as f:
             f.write("Stop camera recording")
 
-    def setup_experiment(self, output_folder, mouse_id):
+    def setup_experiment_folder(self, output_folder, mouse_id):
         """Set up experiment parameters and create output directory"""
         self.date_time = f"{datetime.now():%y%m%d_%H%M%S}"
         self.foldername = f"{self.date_time}_{mouse_id}"
         self.output_path = os.path.join(output_folder, self.foldername)
         os.mkdir(self.output_path)
-        return self.get_laser_parameters()
 
     def get_laser_parameters(self):
         """Get laser parameters from user input"""
@@ -126,13 +126,14 @@ class ExperimentControl:
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Camera tracking started.")
 
     def start_head_sensor(self):
-        """Start head sensor script"""
+        """Start head sensor script with rotation angle"""
         self.head_sensor_process = subprocess.Popen([
             self.python_exe, self.head_sensor_script,
             '--id', self.mouse_id,
             '--date', self.date_time,
             '--path', self.output_path,
-            '--port', self.head_sensor_port  # Add COM port argument
+            '--port', self.head_sensor_port,
+            '--rotation', str(self.rotation_angle)  # Add rotation angle parameter
         ])
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Head sensor script started.")
 
@@ -171,19 +172,26 @@ class ExperimentControl:
                 break
             time.sleep(0.5)
 
-    def save_metadata(self, set_laser_power, brain_laser_power):
+    def save_metadata(self, 
+                    set_laser_power, 
+                    brain_laser_power, 
+                    stim_times_ms, 
+                    num_cycles, 
+                    stim_delay):
         """Save experiment metadata to JSON file"""
         metadata_filename = os.path.join(self.output_path, f"{self.foldername}_metadata.json")
+
         metadata = {
             'mouse_id': self.mouse_id,
             'set_laser_power_mW': set_laser_power,
             'brain_laser_power_mW': brain_laser_power,
-            'stim_times_ms': [10, 25, 50, 100, 150, 200, 250, 500, 1000],
-            'num_cycles': 20,
-            'stim_delay': "10s",
-            'experiment_duration': f"{round((self.end_time - self.start_time) // 60)}m {round((self.end_time - self.start_time) % 60)}s"
+            'stim_times_ms': stim_times_ms,
+            'num_cycles': num_cycles,
+            'stim_delay': stim_delay,
+            'experiment_duration': f"{round((self.end_time - self.start_time) // 60)}m "
+                                f"{round((self.end_time - self.start_time) % 60)}s"
         }
-        
+
         with open(metadata_filename, 'w') as f:
             json.dump(metadata, f, indent=4)
 
@@ -207,17 +215,42 @@ class ExperimentControl:
         if daq_port:
             self.arduino_daq_port = daq_port
 
-    def run_experiment(self, output_folder, mouse_id):
+    def run_experiment(self, 
+                    output_folder, 
+                    mouse_id,
+                    set_laser_power=None, 
+                    brain_laser_power=None,
+                    stim_times_ms=None,
+                    num_cycles=None,
+                    stim_delay=None,
+                    rotation_angle=90):  # Add rotation angle parameter
         """Main method to run the experiment"""
+
+        # Allow default values if None
+        if stim_times_ms is None:
+            stim_times_ms = [50, 100, 250, 500, 1000, 2000]
+        if num_cycles is None:
+            num_cycles = 20
+        if stim_delay is None:
+            stim_delay = "5s"
+
+        # If set_laser_power/brain_laser_power are not provided from the script,
+        # you could still use the old prompt approach or set some defaults:
+        if set_laser_power is None or brain_laser_power is None:
+            set_laser_power, brain_laser_power = self.get_laser_parameters()  
+            # or comment out the line above and do something else
+
+        self.rotation_angle = rotation_angle
         self.mouse_id = mouse_id
-        set_laser_power, brain_laser_power = self.setup_experiment(output_folder, mouse_id)
+        self.setup_experiment_folder(output_folder, mouse_id)  # see next section
+
         self.start_time = time.perf_counter()
         
-        # Start timer first to ensure it's in the main thread
+        # Start the timer
         self.timer_process = subprocess.Popen([self.python_exe, self.timer_path], shell=False)
         time.sleep(2)  # Give timer a moment to start
         
-        # Start all other processes
+        # Start other processes
         self.start_arduino_daq()
         self.start_camera_tracking()
         self.start_head_sensor()
@@ -228,10 +261,19 @@ class ExperimentControl:
         self.wait_for_completion()
         
         self.end_time = time.perf_counter()
-        self.save_metadata(set_laser_power, brain_laser_power)
-        self.cleanup_processes()
         
+        # Save the metadata with our flexible parameters
+        self.save_metadata(
+            set_laser_power,
+            brain_laser_power,
+            stim_times_ms,
+            num_cycles,
+            stim_delay
+        )
+        
+        self.cleanup_processes()
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Experiment finished running.")
+
 
 
 if __name__ == "__main__":
