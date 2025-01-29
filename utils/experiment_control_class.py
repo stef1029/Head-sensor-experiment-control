@@ -8,7 +8,7 @@ import json
 from colorama import init, Fore, Back, Style
 import sys
 
-from utils import countdown_timer, check_for_signal_file, delete_signal_files
+from utils import countdown_timer, check_for_signal_file, delete_signal_files, create_end_signal
 
 init()
 
@@ -19,6 +19,7 @@ class ExperimentControl:
         self.stim_board_port = 'COM23'  # STIM BOARD PORT - CHANGE THIS AS NEEDED
         self.head_sensor_port = 'COM24'  # HEAD SENSOR PORT - CHANGE THIS AS NEEDED
         self.arduino_daq_port = 'COM2'   # ARDUINO DAQ PORT - CHANGE THIS AS NEEDED
+        self.laser_port = 'COM11'        # LASER CONTROL PORT - CHANGE THIS AS NEEDED
         
         self.baud_rate = 57600
         self.timeout = 2
@@ -54,23 +55,25 @@ class ExperimentControl:
         self.head_sensor_script = config.get("HEAD_SENSOR_SCRIPT")
         self.arduino_daq_path = config.get("SERIAL_LISTEN")
         self.camera_exe = config.get("BEHAVIOUR_CAMERA")
+        self.laser_control = str(config.get("LASER_CONTROL_SCRIPT"))
 
-    def start_stim_board(self):
+    def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay):
         """Initialize and start the stimulation board"""
-        try:
-            self.stim_board = serial.Serial(self.stim_board_port, self.baud_rate, timeout=self.timeout)
-        except serial.SerialException as e:
-            try:
-                time.sleep(1)
-                self.stim_board = serial.Serial(self.stim_board_port, self.baud_rate, timeout=self.timeout)
-            except serial.SerialException as e:
-                print(Fore.RED + f"Failed to connect to stim board on port {self.stim_board_port}." + Style.RESET_ALL)
-                raise e
-                
-        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + 
-              f"Connected to stim board on port {self.stim_board_port}.")
-        time.sleep(2)
-        self.stim_board.write(b's')  # Start the stim board
+        powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
+        stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
+
+        self.laser_control_process = subprocess.Popen([
+            self.python_exe, self.laser_control,
+            '--laser_port', self.laser_port,
+            '--arduino_port', self.stim_board_port,
+            '--powers'] + powers_args +
+            ['--stim_times'] + stim_times_args +
+            ['--num_cycles', str(num_cycles),
+            '--stim_delay', str(stim_delay)]
+        )
+
+    def wait_for_stim_completion(self):
+        self.laser_control_process.wait()
 
     def create_stim_signal(self):
         """Create a signal file to indicate stim experiment completion"""
@@ -138,46 +141,22 @@ class ExperimentControl:
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Head sensor script started.")
 
 
-
-    def monitor_stim_board(self):
-        """Monitor stimulation board for completion or user exit"""
-        while True:
-            if self.stim_board.in_waiting:
-                if self.stim_board.read() == b'e':
-                    print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + 
-                          "Received stop signal from stim board.")
-                    self.cleanup_stim_board()
-                    break
-            if keyboard.is_pressed(self.exit_key):
-                print("User requested to stop the program.")
-                self.cleanup_stim_board()
-                break
-
-    def cleanup_stim_board(self):
-        """Clean up stimulation board resources"""
-        if self.exit_key == 'esc':
-            self.stim_board.write(b'e')
-            self.stim_board.write(b'e')
-            self.stim_board.write(b'e')
-            time.sleep(1)
-        self.stim_board.close()
-        self.create_stim_signal()
-        self.stop_camera(4)
-
     def wait_for_completion(self):
         """Wait for experiment completion"""
         while True:
-            if check_for_signal_file(self.output_path):
+            if check_for_signal_file(self.output_path, "head_sensor"):
                 time.sleep(1)
                 break
             time.sleep(0.5)
+        create_end_signal(self.output_path, "behaviour_control")
 
     def save_metadata(self, 
                     set_laser_power, 
                     brain_laser_power, 
                     stim_times_ms, 
                     num_cycles, 
-                    stim_delay):
+                    stim_delay,
+                    notes):
         """Save experiment metadata to JSON file"""
         metadata_filename = os.path.join(self.output_path, f"{self.foldername}_metadata.json")
 
@@ -189,7 +168,8 @@ class ExperimentControl:
             'num_cycles': num_cycles,
             'stim_delay': stim_delay,
             'experiment_duration': f"{round((self.end_time - self.start_time) // 60)}m "
-                                f"{round((self.end_time - self.start_time) % 60)}s"
+                                f"{round((self.end_time - self.start_time) % 60)}s",
+            'notes': notes
         }
 
         with open(metadata_filename, 'w') as f:
@@ -198,15 +178,23 @@ class ExperimentControl:
     def cleanup_processes(self):
         """Clean up all running processes"""
         self.timer_process.terminate()
-        for process in [self.head_sensor_process, self.arduino_DAQ_process, 
-                       self.camera_process]:
+        processes = []
+        if self.run_head_sensor:
+            processes.append(self.head_sensor_process)
+        if self.run_arduino_daq:
+            processes.append(self.arduino_DAQ_process)
+        if self.run_camera:
+            processes.append(self.camera_process)
+        if self.run_stim_board:
+            processes.append(self.laser_control_process)
+        for process in processes:
             if process:
                 process.wait()
                 process.terminate()
         
         delete_signal_files(self.output_path)
 
-    def configure_ports(self, stim_port=None, head_port=None, daq_port=None):
+    def configure_ports(self, stim_port=None, head_port=None, daq_port=None, laser_port=None):
         """Configure COM ports for all devices"""
         if stim_port:
             self.stim_board_port = stim_port
@@ -214,17 +202,29 @@ class ExperimentControl:
             self.head_sensor_port = head_port
         if daq_port:
             self.arduino_daq_port = daq_port
+        if laser_port:
+            self.laser_port = laser_port
 
     def run_experiment(self, 
                     output_folder, 
                     mouse_id,
-                    set_laser_power=None, 
-                    brain_laser_power=None,
+                    set_laser_powers=None, 
+                    brain_laser_powers=None,
                     stim_times_ms=None,
                     num_cycles=None,
                     stim_delay=None,
-                    rotation_angle=90):  # Add rotation angle parameter
+                    rotation_angle=90, 
+                    notes = "",
+                    run_head_sensor=True,
+                    run_camera=True,
+                    run_arduino_daq=True,
+                    run_stim_board=True):  
         """Main method to run the experiment"""
+
+        self.run_head_sensor = run_head_sensor
+        self.run_camera = run_camera
+        self.run_arduino_daq = run_arduino_daq
+        self.run_stim_board = run_stim_board
 
         # Allow default values if None
         if stim_times_ms is None:
@@ -236,8 +236,8 @@ class ExperimentControl:
 
         # If set_laser_power/brain_laser_power are not provided from the script,
         # you could still use the old prompt approach or set some defaults:
-        if set_laser_power is None or brain_laser_power is None:
-            set_laser_power, brain_laser_power = self.get_laser_parameters()  
+        if set_laser_powers is None or brain_laser_powers is None:
+            set_laser_powers, brain_laser_powers = self.get_laser_parameters()  
             # or comment out the line above and do something else
 
         self.rotation_angle = rotation_angle
@@ -251,24 +251,42 @@ class ExperimentControl:
         time.sleep(2)  # Give timer a moment to start
         
         # Start other processes
-        self.start_arduino_daq()
-        self.start_camera_tracking()
-        self.start_head_sensor()
+        if self.run_arduino_daq:
+            self.start_arduino_daq()
+        if self.run_camera:
+            self.start_camera_tracking()
+        if self.run_head_sensor:
+            self.start_head_sensor()
         
-        countdown_timer(10, message="Starting laser control board")
-        self.start_stim_board()
-        self.monitor_stim_board()
+        if self.run_stim_board:
+            countdown_timer(10, message="Starting laser control board")
+            self.start_stim_board(set_laser_powers,
+                                    stim_times_ms,
+                                    num_cycles,
+                                    stim_delay)
+        
+            # code pauses here until laser control finishes or esc pressed.
+            self.laser_control_process.wait()
+            self.create_stim_signal()
+
+        if self.run_head_sensor:
+            self.head_sensor_process.wait()
+            self.stop_camera(4)
+        if self.run_camera:
+            self.camera_process.wait()
+        
         self.wait_for_completion()
         
         self.end_time = time.perf_counter()
         
         # Save the metadata with our flexible parameters
         self.save_metadata(
-            set_laser_power,
-            brain_laser_power,
+            set_laser_powers,
+            brain_laser_powers,
             stim_times_ms,
             num_cycles,
-            stim_delay
+            stim_delay,
+            notes
         )
         
         self.cleanup_processes()

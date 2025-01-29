@@ -124,6 +124,7 @@ async def check_stim_signal(file_path, stop_event):
             if os.path.exists(file_path):
                 stop_event.set()
                 head_sensor.write(b'e')
+                head_sensor.write(b'q')
                 break
             await asyncio.sleep(1)  # Check every second
     finally:
@@ -199,6 +200,7 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotatio
         # Check for manual stop
         if keyboard.is_pressed(exit_key):
             head_sensor.write(b'e')
+            head_sensor.write(b'q')
             break
 
         loop.run_until_complete(asyncio.sleep(0))
@@ -213,7 +215,7 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotatio
           f"{(full_messages/message_count)*100 if message_count > 0 else 0:.2f}%")
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
 
-    create_end_signal(output_path)
+    create_end_signal(output_path, source = "head_sensor")
 
     # Save everything
     save_data(

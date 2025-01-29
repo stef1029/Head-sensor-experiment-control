@@ -36,10 +36,11 @@ async def check_signal_files(output_path, stop_event):
     try:
         behaviour_signal = False
         camera_signal = False
+        head_sensor_signal = False
         
         while not stop_event.is_set():
             # Check for behaviour control end signal
-            if os.path.exists(output_path / "end_signal.signal"):
+            if os.path.exists(output_path / "end_signal_behaviour_control.signal"):
                 behaviour_signal = True
                 print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received behaviour control end signal.")
             
@@ -48,9 +49,15 @@ async def check_signal_files(output_path, stop_event):
             if os.path.exists(camera_signal_path):
                 camera_signal = True
                 print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received camera end signal.")
+
+            head_sensor_signal_path = output_path / f"end_signal_head_sensor.signal"
+            if os.path.exists(head_sensor_signal_path):
+                head_sensor_signal = True
+                print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received head sensor end signal.")
+
             
             # Only stop if we've received both signals
-            if behaviour_signal and camera_signal:
+            if behaviour_signal and camera_signal and head_sensor_signal:
                 # print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received all end signals. Stopping recording.")
                 stop_event.set()
                 break
