@@ -72,6 +72,32 @@ class ExperimentControl:
             '--stim_delay', str(stim_delay)]
         )
 
+    def start_stim_board_test(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, pulse_freq=0, pulse_on_time=50):
+        """Initialize and start the stimulation board
+        
+        Args:
+            set_laser_powers: Single power value or list of powers in mW
+            stim_times_ms: Single time value or list of stimulation times in ms
+            num_cycles: Number of cycles to run
+            stim_delay: Delay between stimulations in ms
+            pulse_freq: Frequency in Hz for pulse train (0 for solid pulse)
+            pulse_on_time: On time in milliseconds for each pulse
+        """
+        powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
+        stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
+
+        self.laser_control_process = subprocess.Popen([
+            self.python_exe, self.laser_control,
+            '--laser_port', self.laser_port,
+            '--arduino_port', self.stim_board_port,
+            '--powers'] + powers_args +
+            ['--stim_times'] + stim_times_args +
+            ['--num_cycles', str(num_cycles),
+            '--stim_delay', str(stim_delay),
+            '--pulse_freq', str(pulse_freq),
+            '--pulse_on_time', str(pulse_on_time)]
+        )
+
     def wait_for_stim_completion(self):
         self.laser_control_process.wait()
 
@@ -213,6 +239,8 @@ class ExperimentControl:
                     stim_times_ms=None,
                     num_cycles=None,
                     stim_delay=None,
+                    pulse_freq=0,
+                    pulse_on_time=50,
                     rotation_angle=90, 
                     notes = "",
                     run_head_sensor=True,
@@ -260,10 +288,12 @@ class ExperimentControl:
         
         if self.run_stim_board:
             countdown_timer(10, message="Starting laser control board")
-            self.start_stim_board(set_laser_powers,
+            self.start_stim_board_test(set_laser_powers,
                                     stim_times_ms,
                                     num_cycles,
-                                    stim_delay)
+                                    stim_delay,
+                                    pulse_freq=pulse_freq,
+                                    pulse_on_time=pulse_on_time)
         
             # code pauses here until laser control finishes or esc pressed.
             self.laser_control_process.wait()

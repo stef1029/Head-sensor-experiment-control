@@ -36,7 +36,8 @@ if __name__ == "__main__":
     stim_times_ms = [250, 500, 1000]                # ms, stimulation pulse times to use.
     num_cycles = 1                                     # number of cycles of stim times for each power level.
     stim_delay = 2000                                  # ms, delay between stimulation pulses.
-
+    pulse_freq = 10                                    # Hz, frequency of stimulation pulses. (set at 0 to do solid pulse)
+    pulse_on_time = 50                                 # ms, duration of each pulse. 
     # Head sensor rotation angle:
     rotation_angle = 90
 
@@ -73,6 +74,8 @@ if __name__ == "__main__":
         stim_times_ms=stim_times_ms, 
         num_cycles=num_cycles,                   
         stim_delay=stim_delay,
+        pulse_freq=pulse_freq,
+        pulse_on_time=pulse_on_time,
         rotation_angle=rotation_angle,
         notes=notes,
         run_head_sensor=run_head_sensor,
