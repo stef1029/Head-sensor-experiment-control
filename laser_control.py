@@ -53,6 +53,7 @@ def read_arduino_output(arduino, timeout=1):
         if arduino.in_waiting:
             try:
                 new_data = arduino.readline().decode().strip()
+                print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {new_data}")
                 if new_data == "params_received" or new_data == "e":
                     response = new_data
             except UnicodeDecodeError:
@@ -61,13 +62,33 @@ def read_arduino_output(arduino, timeout=1):
             time.sleep(0.1)
     return response
 
-def setup_arduino(arduino_port, stim_times, num_cycles, stim_delay):
-    """Initialize Arduino and send parameters"""
+def setup_arduino(arduino_port, stim_times, num_cycles, stim_delay, pulse_freq, pulse_on_time):
+    """Initialize Arduino and send parameters
+    
+    Args:
+        pulse_freq: Frequency in Hz (0 for solid pulse)
+        pulse_on_time: On time in milliseconds for each pulse
+    """
     arduino = serial.Serial(arduino_port, 57600, timeout=5)
     time.sleep(2)
     arduino.reset_input_buffer()
     
-    params = f"{len(stim_times)}#{','.join(map(str, stim_times))},{num_cycles},{stim_delay}\n"
+    # Calculate pulse timing
+    if pulse_freq <= 0:
+        # For non-pulsing mode, set timing to ensure solid pulse
+        print(Fore.GREEN + "Debug:" + Style.RESET_ALL + " Setting up solid pulse mode")
+        pulse_off_time = 0
+    else:
+        # Calculate period and validate pulse timing
+        print(Fore.GREEN + "Debug:" + Style.RESET_ALL + " Setting up pulse train mode")
+        pulse_period_ms = int(1000 / pulse_freq)  # Convert Hz to ms period
+        if pulse_on_time >= pulse_period_ms:
+            raise ValueError(f"Pulse on time ({pulse_on_time}ms) must be less than pulse period ({pulse_period_ms}ms) at {pulse_freq}Hz")
+        pulse_off_time = pulse_period_ms - pulse_on_time
+    
+    # Format: numDurations#duration1,duration2,...,numCycles,stimDelay,pulseOnTime,pulseOffTime
+    params = f"{len(stim_times)}#{','.join(map(str, stim_times))},{num_cycles},{stim_delay},{pulse_on_time},{pulse_off_time}\n"
+    print(Fore.GREEN + "Debug:" + Style.RESET_ALL + f" Sending parameters: {params.strip()}")
     arduino.write(b'p')
     time.sleep(0.01)
     
@@ -102,7 +123,6 @@ def cleanup(laser, arduino):
     except:
         pass
 
-
 def main():
     parser = argparse.ArgumentParser(description='Laser stimulation coordinator')
     parser.add_argument('--laser_port', type=str, default='COM11', help='COM port for laser')
@@ -116,6 +136,10 @@ def main():
                         help='Number of cycles for each power level')
     parser.add_argument('--stim_delay', type=int, default=5000,
                         help='Delay between stimulations in milliseconds')
+    parser.add_argument('--pulse_freq', type=float, default=10.0,
+                        help='Pulse frequency in Hz')
+    parser.add_argument('--pulse_on_time', type=int, default=50,
+                        help='Pulse on time in milliseconds (0 for solid pulse)')
     args = parser.parse_args()
 
     laser = None
@@ -128,6 +152,11 @@ def main():
         print(Fore.GREEN + f"\nEstimated total duration: {est_duration:.1f} minutes" + Style.RESET_ALL)
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + f"Running {len(args.powers)} power levels: {args.powers} mW")
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + f"Each power level will run {args.num_cycles} cycles")
+        if args.pulse_freq <= 0:
+            print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "Using solid pulses (no pulse train)")
+        else:
+            print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + 
+                  f"Pulse frequency: {args.pulse_freq} Hz, on time: {args.pulse_on_time}ms")
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + f"Press ESC at any time to stop the sequence\n")
 
         # Initialize laser
@@ -151,7 +180,8 @@ def main():
         # Setup Arduino
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "Initializing Arduino...")
         arduino = setup_arduino(args.arduino_port, args.stim_times, 
-                              args.num_cycles, args.stim_delay)
+                              args.num_cycles, args.stim_delay,
+                              args.pulse_freq, args.pulse_on_time)
         
         # Run through power levels
         for power in args.powers:
@@ -166,9 +196,13 @@ def main():
                     raise KeyboardInterrupt("ESC pressed")
                 
                 if arduino.in_waiting:
-                    response = arduino.readline().decode().strip()
-                    if response == 'e':
-                        break
+                    try:
+                        response = arduino.readline().decode().strip()
+                        print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {response}")
+                        if response == 'e':
+                            break
+                    except UnicodeDecodeError:
+                        pass
                 time.sleep(0.1)
         
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "\nSequence complete - shutting down...")

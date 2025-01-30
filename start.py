@@ -20,8 +20,11 @@ if __name__ == "__main__":
     # mouse_id = "mtaq15-1b" # fiber TE=96%
     # fiber_TE = 96
 
-    mouse_id = "test"
-    fiber_TE = 88
+    mouse_id = "mtaq15-1a" # fiber TE=96%
+    fiber_TE = 94
+
+    # mouse_id = "test"
+    # fiber_TE = 94
 
     # measured laser power at end of patch cord/ computer laser power (%)
     patch_cord_TE = 66  
@@ -32,12 +35,12 @@ if __name__ == "__main__":
     # output_folder = r"D:\2501-Pitx2_opto_inhib_headsensor"     # Output folder for data
     output_folder = r"D:\2701_Pitx2_opto_excite_headsensor"
 
-    at_brain_power_levels = [0.5, 1, 3, 5]              # mW, stimulation intensities to use.
-    stim_times_ms = [250, 500, 1000]                # ms, stimulation pulse times to use.
-    num_cycles = 1                                     # number of cycles of stim times for each power level.
-    stim_delay = 2000                                  # ms, delay between stimulation pulses.
+    at_brain_power_levels = [0.1, 0.5, 1, 3, 5, 10]      # mW, stimulation intensities to use.
+    stim_times_ms = [50, 100, 250, 500, 1000, 2000]     # ms, stimulation pulse times to use.
+    num_cycles = 20                                     # number of cycles of stim times for each power level.
+    stim_delay = 5000                                  # ms, delay between stimulation pulses.
     pulse_freq = 10                                    # Hz, frequency of stimulation pulses. (set at 0 to do solid pulse)
-    pulse_on_time = 50                                 # ms, duration of each pulse. 
+    pulse_on_time = 10                                 # ms, duration of each pulse. 
     # Head sensor rotation angle:
     rotation_angle = 90
 
