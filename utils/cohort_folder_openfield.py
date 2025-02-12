@@ -175,7 +175,7 @@ class Cohort_folder_openfield:
                 processed_data = {}
                 # We'll assume there's a single indicator file for now:
                 # e.g. 'head_sensor_synced.json'
-                indicator_file = self.find_file(session_path, 'head_sensor_synced.json')
+                indicator_file = self.find_file(session_path, 'synced_data.json')
 
                 if indicator_file:
                     processed_data["preliminary_analysis_done?"] = True
