@@ -94,94 +94,147 @@ def wait_until_time(target_hour):
             print(f"Waiting for {remaining_time} more hour(s) until {target_hour}:00. Current time: {current_time.strftime('%H:%M:%S')}")
             time.sleep(60)
 
-def process_directory(cohort_directory):
+def find_sessions_to_process(cohort_directory):
     """
-    Processes a single cohort directory and syncs with CephFS.
-    Only processes sessions where preliminary analysis hasn't been done yet.
-    
-    Args:
-        cohort_directory (dict): Dictionary containing local and remote paths
+    Given a cohort directory info dict, return a list of sessions that need processing
+    (where raw data is present but preliminary analysis not yet done).
     """
-    print(f"\nProcessing directory: {cohort_directory['local']}")
-    
-    # Initialize the cohort folder
-    cohort_folder = Cohort_folder_openfield(cohort_directory['local'])    
-    cohort_info = cohort_folder.cohort
+    print(f"\nExamining directory: {cohort_directory['local']}")
 
-    # Gather sessions that need processing (preliminary analysis not done yet)
+    cohort_folder = Cohort_folder_openfield(cohort_directory['local'])
+    cohort_info = cohort_folder.cohort
+    
     sessions_to_process = []
     for mouse, mouse_data in cohort_info["mice"].items():
         for session in mouse_data["sessions"]:
             session_info = cohort_folder.get_session(session)
             
-            # Check if raw data is present and preliminary analysis hasn't been done
             raw_data_present = session_info["raw_data"].get("is_all_raw_data_present?", False)
             analysis_done = session_info["processed_data"].get("preliminary_analysis_done?", False)
             
             if raw_data_present and not analysis_done:
                 sessions_to_process.append(session_info)
-                print(f"Found unprocessed session: {session} for mouse {mouse}")
+                print(f"  Found unprocessed session: {session} for mouse {mouse}")
             elif not raw_data_present:
-                print(f"Skipping session {session} for mouse {mouse} - Missing raw data")
+                print(f"  Skipping session {session} for mouse {mouse} - Missing raw data")
             elif analysis_done:
-                print(f"Skipping session {session} for mouse {mouse} - Already processed")
+                print(f"  Skipping session {session} for mouse {mouse} - Already processed")
+    
+    return sessions_to_process
 
+def run_postprocessing_for_sessions(sessions_to_process):
+    """
+    For each session in sessions_to_process, run the analysis logic.
+    """
+    print(f"Starting processing of {len(sessions_to_process)} sessions...")
+    for session_info in sessions_to_process:
+        processor = Analysis_manager_openfield(session_info)
+        # processor.run_analysis()  # Uncomment or replace with the actual method to run
+
+def process_cohort_all_in_one(cohort_directory):
+    """
+    Original all-in-one logic:
+    1. Find sessions needing processing
+    2. If any, do video compression
+    3. Post-process each session
+    4. Then rsync
+    """
+    sessions_to_process = find_sessions_to_process(cohort_directory)
+    
+    # Step 2: If we have sessions, compress videos
     if sessions_to_process:
-        print(f"\nFound {len(sessions_to_process)} sessions that need processing...")
+        print(f"\nFound {len(sessions_to_process)} sessions needing processing for {cohort_directory['local']}.")
         process_cohort_videos(cohort_directory['local'])
-
-    print("Starting processing sessions...")
     
-    # Run processing for each session
-    for session in sessions_to_process:
-        processor = Analysis_manager_openfield(session)
-        # Add your analysis execution here
-        # processor.run_analysis()
+    # Step 3: Post-processing
+    run_postprocessing_for_sessions(sessions_to_process)
     
-    # Sync to CephFS after processing
+    # Step 4: Rsync
     print(f"\nSyncing {cohort_directory['rsync_local']} with CephFS server...\n")
     sync_with_cephfs(cohort_directory['rsync_local'], cohort_directory['rsync_cephfs_mapped'])
-    
-    print(f"Processing and sync complete for directory: {cohort_directory['local']}")
 
 def main():
     """
     Main function to process multiple cohort directories and sync with CephFS.
+    We have three cohorts defined. The first two will be processed
+    using the "video-compress-then-postprocess-then-rsync" sequence
+    in one big block, while the third continues with the original logic.
     """
     # Define cohort directories with both local and remote paths using Windows paths
     cohort_directories = []
 
-    cohort_directory = {'local': Path(r"D:\2501_Pitx2_opto_inhib_headsensor"),
-                    'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_inhib_headsensor_Stefan"),
-                    'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan",
-                    'rsync_local': r"/cygdrive/d/2501_Pitx2_opto_inhib_headsensor",
-                    'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan"}
-    cohort_directories.append(cohort_directory)
+    # 1) 2501_Pitx2_opto_inhib_headsensor
+    cohort_directory_1 = {
+        'local': Path(r"D:\2501_Pitx2_opto_inhib_headsensor"),
+        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_inhib_headsensor_Stefan"),
+        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan",
+        'rsync_local': r"/cygdrive/d/2501_Pitx2_opto_inhib_headsensor",
+        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan"
+    }
+    cohort_directories.append(cohort_directory_1)
 
-    cohort_directory = {'local': Path(r"D:\2701_Pitx2_opto_excite_headsensor"),
-                    'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
-                    'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
-                    'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
-                    'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"}
-    cohort_directories.append(cohort_directory)
+    # 2) 2701_Pitx2_opto_excite_headsensor
+    cohort_directory_2 = {
+        'local': Path(r"D:\2701_Pitx2_opto_excite_headsensor"),
+        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+        'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
+        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    }
+    cohort_directories.append(cohort_directory_2)
 
-    cohort_directory = {'local': Path(r"D:\1102_VM_opto_excite_headsensor"),
-                    'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\1102_VM-opto-excite-headsensor_Dan"),
-                    'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan",
-                    'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
-                    'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan"}
-    cohort_directories.append(cohort_directory)
+    # 3) 1102_VM_opto_excite_headsensor
+    cohort_directory_3 = {
+        'local': Path(r"D:\1102_VM_opto_excite_headsensor"),
+        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\1102_VM-opto-excite-headsensor_Dan"),
+        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan",
+        'rsync_local': r"/cygdrive/d/1102_VM_opto_excite_headsensor",
+        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan"
+    }
+    cohort_directories.append(cohort_directory_3)
 
     print("Starting main processing of multiple directories...")
-    
+
     # Optional: Wait until after work hours (e.g., 10 PM) before starting
     # wait_until_time(22)  # Uncomment to enable waiting until 10 PM
-    
-    # Process each directory and sync
-    for cohort_directory in cohort_directories:
-        process_directory(cohort_directory)
 
-    print("All directories have been processed and synced successfully.")
+    # ------------------------------------------------------------------
+    # PART A: For the cohorts, do the "three-phase" approach:
+    #   1) Gather sessions, compress all videos first
+    #   2) Post-process all sessions
+    #   3) Then rsync
+    # ------------------------------------------------------------------
+    # Store the sessions that need processing for the cohorts
+    sessions_map = {}
+
+    # Phase 1: Gather sessions, compress videos for each
+    print("\n=== PHASE 1: Gathering sessions & compressing videos ===")
+    for cd in cohort_directories:
+        sessions_to_process = find_sessions_to_process(cd)
+        sessions_map[cd['local']] = sessions_to_process
+        if sessions_to_process:
+            print(f"\nFound {len(sessions_to_process)} sessions needing processing in {cd['local']}. Compressing videos...")
+            process_cohort_videos(cd['local'])
+        else:
+            print(f"No sessions to process in {cd['local']}. Skipping compression.")
+
+    # Phase 2: Post-process all sessions
+    print("\n=== PHASE 2: Post-processing sessions ===")
+    for cd in cohort_directories:
+        sessions_to_process = sessions_map[cd['local']]
+        if sessions_to_process:
+            run_postprocessing_for_sessions(sessions_to_process)
+        else:
+            print(f"No sessions to post-process in {cd['local']}.")
+
+    # Phase 3: Rsync
+    print("\n=== PHASE 3: Syncing changes ===")
+    for cd in cohort_directories:
+        print(f"Syncing {cd['rsync_local']} to {cd['rsync_cephfs_mapped']}...")
+        sync_with_cephfs(cd['rsync_local'], cd['rsync_cephfs_mapped'])
+
+
+    print("\nAll requested directories have been processed and synced successfully.")
 
 if __name__ == "__main__":
     main()
