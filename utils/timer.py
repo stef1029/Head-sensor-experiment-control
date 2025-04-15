@@ -23,7 +23,7 @@ class TimerApp:
         self.root.after(1000, self.update_time)  # Update every second
 
     def check_esc_key(self):
-        if keyboard.is_pressed("esc"):
+        if keyboard.is_pressed("del"):
             self.root.quit()
         else:
             self.root.after(100, self.check_esc_key)

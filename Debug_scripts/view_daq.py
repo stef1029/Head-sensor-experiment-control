@@ -47,7 +47,7 @@ def plot_multiple_channels(arduino_daq_h5_path, channel_names):
 def main():
     # === Fill in these variables ===
     # Provide the path to your ArduinoDAQ .h5 file
-    arduino_daq_h5_path = r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn\250320_153211_mtaq15-3b\250320_153211_mtaq15-3b-ArduinoDAQ.h5"
+    arduino_daq_h5_path = r"C:\20250405_Pitx2_opto_excite_headsensor\250415_213245_test2\250415_213245_test2-ArduinoDAQ.h5"
     
     # List all channels you want to plot
     channel_names = ["CAMERA_SYNC", "HEADSENSOR_SYNC", "LASER_SYNC"]  # Add or modify channels as needed

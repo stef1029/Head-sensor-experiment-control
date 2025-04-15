@@ -65,13 +65,13 @@ if __name__ == "__main__":
     # fiber_TE = 95
 
     #mouse_id = "mtaq15-3b" # fiber TE=93%
-    #fiber_TE = 93
+    # fiber_TE = 93
 
-    #mouse_id = "mtaq20-1a" # fiber TE=97%
-    #fiber_TE = 97
+    # mouse_id = "mtaq20-1a" # fiber TE=97%
+    # fiber_TE = 97
     
-    #mouse_id = "mtaq20-1b" # fiber TE=91%
-    #fiber_TE = 91
+    # mouse_id = "mtaq20-1b" # fiber TE=91%
+    # fiber_TE = 91
 
     # mouse_id = "mtaq15-4a" # fiber TE=89%
     # fiber_TE = 89
@@ -82,39 +82,67 @@ if __name__ == "__main__":
     # mouse_id = "mtaq20-1e" # fiber TE=93%
     # fiber_TE = 93
 
+    # mouse_id = "mtaq19-1f" # fiber TE=95%
+    # fiber_TE = 95
+
+    # mouse_id = "mtaq16-1b" # fiber TE=90%
+    # fiber_TE = 90
+
+    # mouse_id = "mtaq14-1d" # fiber TE=92%
+    # fiber_TE = 92
+
+    # mouse_id = "mtaq19-1g" # fiber TE=91%
+    # fiber_TE = 91
+
+    # mouse_id = "mtaq16-3a" # fiber TE=98%
+    # fiber_TE = 98
+
+    # mouse_id = "mtaq13-3b" # fiber TE=94%
+    # fiber_TE = 94
+
+    # mouse_id = "mtaq15-3a" # fiber TE=95%
+    # fiber_TE = 95
+
+    # mouse_id = "mtaq14-1e" # fiber TE=96% 
+    # fiber_TE = 96
+
+    mouse_id = "mtaq15-2f" # fiber TE=92% 
+    fiber_TE = 92
 
     mouse_id = "test2"
     fiber_TE = 94
 
 
-    patch_cord_TE = 67
+    patch_cord_TE = 59
+
 
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
-    # at_brain_power_levels = [5, 10, 15, 20, 30]      
-    # stim_times_ms = [50, 100, 250, 500, 1000, 2000]    
-    # num_cycles = 20
-    # stim_delay = 5000
+    output_folder = r"C:\20250405_Pitx2_opto_excite_headsensor"
+    at_brain_power_levels = [1, 3, 5, 10, 15, 20, 30]      
+    stim_times_ms = [50, 100, 250, 500, 1000, 2000]    
+    num_cycles = 20
+    stim_delay = 5000
+    pulse_freq = 30
+    pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    rotation_angle = 90 # chip backward
+    notes = "MTAQ15.2f - MD Het, backward chip"
+
+    """
+    -------------- Set experiment parameters here ----------------------------------------------------------------
+    """
+    # output_folder = r"D:\test_output"
+    # at_brain_power_levels = [5]      
+    # stim_times_ms = [2000]    
+    # num_cycles = 5
+    # stim_delay = 3000
     # pulse_freq = 30
     # pulse_on_time = 10
     # rotation_angle = 90
     # notes = ""
-
-    """
-    -------------- Set experiment parameters here ----------------------------------------------------------------
-    """
-    output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
-    at_brain_power_levels = [5]      
-    stim_times_ms = [2000]    
-    num_cycles = 5
-    stim_delay = 3000
-    pulse_freq = 30
-    pulse_on_time = 10
-    rotation_angle = 90
-    notes = ""
 
     """
     -------------- Advanced setup (do not change): -------------------------------------------------
@@ -126,7 +154,8 @@ if __name__ == "__main__":
     experiment.configure_ports(
         stim_port='COM23',
         head_port='COM24',
-        daq_port='COM19'
+        daq_port='COM19',
+        laser_port='COM26'
     )
 
     # Turn items in experiment on/off
