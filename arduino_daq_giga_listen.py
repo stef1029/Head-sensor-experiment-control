@@ -38,7 +38,7 @@ async def check_signal_files(output_path, stop_event):
         if os.path.exists(output_path / "end_signal_behaviour_control.signal"):
             behaviour_signal = True
             print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received behaviour control end signal.")
-        camera_signal_path = output_path / "rig_4_camera_finished.signal"
+        camera_signal_path = output_path / "rig_openfield_camera_finished.signal"
         if os.path.exists(camera_signal_path):
             camera_signal = True
             print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received camera end signal.")

@@ -141,7 +141,7 @@ class ExperimentControl:
             "--id", self.mouse_id,
             "--date", self.date_time,
             "--path", self.output_path,
-            "--rig", "4",
+            "--serial_number", "24174020",
             "--fps", str(self.fps),
             "--windowWidth", str(self.window_width),
             "--windowHeight", str(self.window_height)
@@ -294,7 +294,7 @@ class ExperimentControl:
 
         if self.run_head_sensor:
             self.head_sensor_process.wait()
-            self.stop_camera(4)
+            self.stop_camera("openfield")
         if self.run_camera:
             self.camera_process.wait()
         

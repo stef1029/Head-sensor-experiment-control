@@ -19,22 +19,22 @@ if __name__ == "__main__":
     # mouse_id = "mtaq15-1b" # fiber TE=96%
     # fiber_TE = 96
 
-    # mouse_id = "mtaq15-1a" # fiber TE=96%
+    # mouse_id = "mtaq15-1a" # fiber TE=94%
     # fiber_TE = 94
 
-    # mouse_id = "mtaq11-2b" # fiber TE=96%
+    # mouse_id = "mtaq11-2b" # fiber TE=88%
     # fiber_TE = 88
 
-    # mouse_id = "mtaq15-1e" # fiber TE=96%
+    # mouse_id = "mtaq15-1e" # fiber TE=95%
     # fiber_TE = 95
 
-    # mouse_id = "mtaq15-1d" # fiber TE=96%
+    # mouse_id = "mtaq15-1d" # fiber TE=94%
     # fiber_TE = 94
 
-    # mouse_id = "mtaq16-1f" # fiber TE=96%
+    # mouse_id = "mtaq16-1f" # fiber TE=97%
     # fiber_TE = 97
 
-    # mouse_id = "mtaq16-1b" # fiber TE=96%
+    # mouse_id = "mtaq16-1b" # fiber TE=90%
     # fiber_TE = 90
 
     # mouse_id = "mtaq14-1a" # fiber TE=88%
@@ -46,23 +46,71 @@ if __name__ == "__main__":
     # mouse_id = "mtaq14-1c" # fiber TE=70%
     # fiber_TE = 70
 
-    mouse_id = "mtaq14-1c" # fiber TE=28%
-    fiber_TE = 28
+    # mouse_id = "mtaq16-1c" # fiber TE=28%
+    # fiber_TE = 28
 
-    # mouse_id = "test"
+    # mouse_id = "mtaq14-1k" # fiber TE=94%
     # fiber_TE = 94
 
+    # mouse_id = "mtaq16-1d" # fiber TE=58%
+    # fiber_TE = 58
 
-    patch_cord_TE = 59
+    # mouse_id = "mtbz8-2f" # fiber TE=80%
+    # fiber_TE = 80
+
+    # mouse_id = "mtaq15-2f" # fiber TE=93%     
+    # fiber_TE = 93
+
+    # mouse_id = "mtaq15-3b" # fiber TE=95%
+    # fiber_TE = 95
+
+    #mouse_id = "mtaq15-3b" # fiber TE=93%
+    #fiber_TE = 93
+
+    #mouse_id = "mtaq20-1a" # fiber TE=97%
+    #fiber_TE = 97
+    
+    #mouse_id = "mtaq20-1b" # fiber TE=91%
+    #fiber_TE = 91
+
+    # mouse_id = "mtaq15-4a" # fiber TE=89%
+    # fiber_TE = 89
+
+    # mouse_id = "mtaq15-4b" # fiber TE=86%
+    # fiber_TE = 86
+    
+    # mouse_id = "mtaq20-1e" # fiber TE=93%
+    # fiber_TE = 93
+
+
+    mouse_id = "test2"
+    fiber_TE = 94
+
+
+    patch_cord_TE = 67
+
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    output_folder = r"d:\1102_VM_opto_excite_headsensor"
-    at_brain_power_levels = [0.1, 0.5, 1, 3, 5, 10]      
-    stim_times_ms = [50, 100, 250, 500, 1000, 2000]     
-    num_cycles = 20
-    stim_delay = 5000
+    # output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
+    # at_brain_power_levels = [5, 10, 15, 20, 30]      
+    # stim_times_ms = [50, 100, 250, 500, 1000, 2000]    
+    # num_cycles = 20
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # rotation_angle = 90
+    # notes = ""
+
+    """
+    -------------- Set experiment parameters here ----------------------------------------------------------------
+    """
+    output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
+    at_brain_power_levels = [5]      
+    stim_times_ms = [2000]    
+    num_cycles = 5
+    stim_delay = 3000
     pulse_freq = 30
     pulse_on_time = 10
     rotation_angle = 90
@@ -124,5 +172,5 @@ if __name__ == "__main__":
         run_camera=run_camera,
         run_arduino_daq=run_arduino_daq,
         run_stim_board=run_stim_board,
-        channel_list=channel_list  # Pass our channel list here
+        channel_list=channel_list 
     )

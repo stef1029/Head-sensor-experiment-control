@@ -196,6 +196,16 @@ def main():
     }
     cohort_directories.append(cohort_directory_3)
 
+    # 4) 20250303_Pitx2_opto_excite_headsensor
+    cohort_directory_4 = {
+        'local': Path(r"d:\20250303_Pitx2_opto_excite_headsensor"),
+        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+        'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
+        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    } 
+    cohort_directories.append(cohort_directory_4)
+
     print("Starting main processing of multiple directories...")
 
     # Optional: Wait until after work hours (e.g., 10 PM) before starting
@@ -235,7 +245,7 @@ def main():
     # for cd in cohort_directories:
     #     print(f"Syncing {cd['rsync_local']} to {cd['rsync_cephfs_mapped']}...")
     #     sync_with_cephfs(cd['rsync_local'], cd['rsync_cephfs_mapped'])
-
+    print("\n=== PHASE 3: Syncing switched off. Move files manually. ===")
 
     print("\nAll requested directories have been processed and synced successfully.")
 
