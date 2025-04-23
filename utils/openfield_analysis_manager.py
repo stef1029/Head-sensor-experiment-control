@@ -1,13 +1,22 @@
-
 import json
 import numpy as np
 import h5py
 import traceback
 from pathlib import Path
+import os
 
+# Import the NWB conversion utility
+from utils.headtracker_to_nwb import headtracker_to_nwb
 
 class Analysis_manager_openfield:
-    def __init__(self, session_dict):
+    def __init__(self, session_dict, create_nwb=True):
+        """
+        Initialize the analysis manager and process data.
+        
+        Args:
+            session_dict (dict): Dictionary containing session information
+            create_nwb (bool): Whether to create an NWB file after synchronization
+        """
         # Basic attributes
         self.session_id = session_dict.get("session_id")
         self.session_dir = Path(session_dict.get("directory", ""))
@@ -22,11 +31,16 @@ class Analysis_manager_openfield:
 
         # Run the main sync functions
         try:
-            # Sync both head sensor and camera frame data
+            # Sync head sensor, camera frame, and laser data
             self.sync_data = self.sync_all_data()
             self.save_synced_data(self.sync_data)
+            
+            # Create NWB file if requested
+            if create_nwb:
+                self.create_nwb_file()
+                
         except Exception as e:
-            print(f"Error syncing data for {self.session_dir}: {e}")
+            print(f"Error processing data for {self.session_dir}: {e}")
             traceback.print_exc()
 
     def get_sync_pulses(self, channel_name):
@@ -50,6 +64,53 @@ class Analysis_manager_openfield:
         
         print(f"Found {len(pulse_times)} pulses in ArduinoDAQ for {channel_name} channel.")
         return pulse_times, daq_timestamps
+
+    def get_laser_events(self, channel_name='LASER_SYNC'):
+        """
+        Get both rising and falling edges of laser pulses to record full events.
+        
+        Args:
+            channel_name (str): Name of the laser channel in ArduinoDAQ file
+            
+        Returns:
+            dict: Dictionary containing laser event data
+        """
+        with h5py.File(self.arduino_daq_h5, 'r') as daq_h5:
+            channel_data = np.array(daq_h5['channel_data'][channel_name])
+            daq_timestamps = np.array(daq_h5['timestamps'])
+
+        # Detect both rising and falling edges
+        rising_indices = np.where((channel_data[:-1] == 0) & (channel_data[1:] == 1))[0]
+        falling_indices = np.where((channel_data[:-1] == 1) & (channel_data[1:] == 0))[0]
+        
+        # The edge occurs at index+1
+        rising_times = daq_timestamps[rising_indices + 1]
+        falling_times = daq_timestamps[falling_indices + 1]
+        
+        # Handle case where we have unequal number of rising and falling edges
+        min_len = min(len(rising_times), len(falling_times))
+        
+        # Calculate pulse durations (if we have matching rising and falling edges)
+        durations = []
+        if min_len > 0:
+            # If first falling edge comes before first rising edge, skip it
+            if len(falling_times) > 0 and len(rising_times) > 0 and falling_times[0] < rising_times[0]:
+                falling_times = falling_times[1:]
+                min_len = min(len(rising_times), len(falling_times))
+                
+            # Calculate durations for matching edges
+            if min_len > 0:
+                for i in range(min_len):
+                    duration = falling_times[i] - rising_times[i]
+                    durations.append(duration)
+        
+        print(f"Found {len(rising_times)} rising and {len(falling_times)} falling edges for {channel_name}")
+        
+        return {
+            "rising_times": rising_times.tolist(),
+            "falling_times": falling_times.tolist(),
+            "durations": durations,
+        }
 
     def sync_head_sensor_data(self, pulse_times):
         """
@@ -105,11 +166,14 @@ class Analysis_manager_openfield:
 
     def sync_all_data(self):
         """
-        Sync both head sensor and camera frame data with their respective pulses.
+        Sync head sensor, camera frame, and laser event data with their respective pulses.
         """
-        # Get pulse times for both channels
+        # Get pulse times for head sensor and camera channels
         head_sensor_pulses, _ = self.get_sync_pulses('HEADSENSOR_SYNC')
         camera_pulses, _ = self.get_sync_pulses('CAMERA_SYNC')
+        
+        # Get laser events (rising and falling edges)
+        laser_events = self.get_laser_events('LASER_SYNC')
 
         # Sync head sensor data
         head_sensor_data = self.sync_head_sensor_data(head_sensor_pulses)
@@ -127,7 +191,8 @@ class Analysis_manager_openfield:
             "camera": {
                 "pulse_times": camera_pulses.tolist(),
                 **camera_data
-            } if camera_data is not None else None
+            } if camera_data is not None else None,
+            "laser": laser_events
         }
 
         return synced_data
@@ -144,3 +209,38 @@ class Analysis_manager_openfield:
             print(f"Synced data saved to {output_path}")
         except Exception as e:
             print(f"Failed to save synced data: {e}")
+            
+    def create_nwb_file(self):
+        """
+        Create an NWB file from the synchronized data.
+        """
+        print(f"Creating NWB file for session {self.session_id}...")
+        
+        # Check if synced data JSON exists
+        synced_data_file = self.session_dir / f"{self.session_id}_synced_data.json"
+        if not synced_data_file.exists():
+            print(f"Synced data file not found: {synced_data_file}")
+            return None
+            
+        # Find video file (if any)
+        video_files = list(self.session_dir.glob("*.avi"))
+        video_filename = video_files[0].name if video_files else None
+        
+        try:
+            # Call the NWB conversion function
+            nwb_path = headtracker_to_nwb(
+                session_directory=self.session_dir,
+                video_filename=video_filename
+            )
+            
+            if nwb_path:
+                print(f"Successfully created NWB file: {nwb_path}")
+                return nwb_path
+            else:
+                print(f"Failed to create NWB file for session {self.session_id}")
+                return None
+                
+        except Exception as e:
+            print(f"Error creating NWB file: {e}")
+            traceback.print_exc()
+            return None

@@ -1,11 +1,12 @@
 import multiprocessing as mp
 from pathlib import Path
 import json
+import os
 from datetime import datetime
 
 def process_cohort_videos(cohort_directory: str | Path, num_processes: int = None):
     """
-    Process all videos in a cohort directory.
+    Process all videos in a cohort directory. Skips already processed videos.
     
     Args:
         cohort_directory (str | Path): Root directory containing all session folders
@@ -13,6 +14,7 @@ def process_cohort_videos(cohort_directory: str | Path, num_processes: int = Non
     """
     cohort_directory = Path(cohort_directory)
     processed_count = 0
+    skipped_count = 0
     error_count = 0
     
     # Find all session directories (assuming they contain binary video files)
@@ -22,22 +24,26 @@ def process_cohort_videos(cohort_directory: str | Path, num_processes: int = Non
         print("No sessions with binary video files found.")
         return
     
-    print(f"Found {len(session_dirs)} sessions to process")
+    print(f"Found {len(session_dirs)} sessions with binary video files")
     
     # Process each session
     for session_dir in session_dirs:
         try:
             processor = VideoProcessor(session_dir, num_processes)
-            processor.process_session()
-            processed_count += 1
+            result = processor.process_session()
+            
+            if result == "processed":
+                processed_count += 1
+            elif result == "skipped":
+                skipped_count += 1
+                
         except Exception as e:
             print(f"Error processing session {session_dir}: {e}")
             error_count += 1
-
-            
     
     print(f"\nProcessing complete:")
     print(f"Successfully processed: {processed_count} sessions")
+    print(f"Skipped (already processed): {skipped_count} sessions")
     print(f"Errors encountered: {error_count} sessions")
 
 class VideoProcessor:
@@ -56,13 +62,17 @@ class VideoProcessor:
         """
         Process video data in the session directory.
         Detects binary video files and processes them using the binary conversion method.
+        Skips processing if video already exists.
+        
+        Returns:
+            str: "processed" if video was processed, "skipped" if already processed, None if error
         """
         # Find binary video files in the session directory
         binary_files = list(self.session_directory.glob('*binary_video*'))
         
         if not binary_files:
             print(f"No binary video files found in {self.session_directory}. Skipping...")
-            return
+            return None
 
         if len(binary_files) > 1:
             print(f"Multiple binary video files found in {self.session_directory}. Using the first one.")
@@ -72,11 +82,17 @@ class VideoProcessor:
 
         if not binary_file.exists():
             print(f"Binary file {binary_file} not found. Skipping...")
-            return
+            return None
 
         if not metadata_file.exists():
             print(f"Metadata file {metadata_file} not found. Skipping...")
-            return
+            return None
+            
+        # Check if video already exists (look for any .avi files)
+        video_files = list(self.session_directory.glob('*.avi'))
+        if video_files:
+            print(f"Video file already exists in {self.session_directory}. Skipping conversion...")
+            return "skipped"
 
         # Process the video
         print(f"Processing video in {self.session_directory}...")
@@ -89,17 +105,24 @@ class VideoProcessor:
             print(f"Successfully processed video in {self.session_directory}")
 
             # Check if the video was created successfully
-            latest_video = max(self.session_directory.glob("*_output.avi"), key=lambda x: x.stat().st_mtime)
-            if latest_video.exists() and latest_video.stat().st_size > 0:
-                # Remove the binary video file
-                binary_file.unlink()
-                print(f"Successfully processed video and removed binary file in {self.session_directory}")
+            new_video_files = list(self.session_directory.glob("*_output.avi"))
+            if new_video_files:
+                latest_video = max(new_video_files, key=lambda x: x.stat().st_mtime)
+                if latest_video.exists() and latest_video.stat().st_size > 0:
+                    # Remove the binary video file
+                    binary_file.unlink()
+                    print(f"Successfully processed video and removed binary file in {self.session_directory}")
+                    return "processed"
+                else:
+                    print(f"Video conversion completed but output file not found or empty in {self.session_directory}")
+                    return None
             else:
-                print(f"Video conversion completed but output file not found or empty in {self.session_directory}")
+                print(f"No output video file found in {self.session_directory}")
+                return None
                 
         except Exception as e:
             print(f"Error processing video in {self.session_directory}: {e}")
-
+            return None
 
 
 def convert_binary_to_video(binary_filename, json_filename, output_directory):
