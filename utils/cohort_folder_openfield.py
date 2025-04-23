@@ -4,19 +4,12 @@ import re
 from pathlib import Path
 from datetime import datetime
 
-class Cohort_folder_openfield:
+class Cohort_folder:
     """
-    Similar to the original 'Cohort_folder' class, but adapted for a new 
-    experiment in which each session folder is expected to contain 
-    (at minimum) an 'ArduinoDAQ.h5' and a 'HeadSensor.h5'. 
-    Additional checks/files can be added as needed.
-
-    This class:
-      1) Walks through a top-level 'cohort_directory',
-      2) Finds session subfolders,
-      3) Checks that the required raw data files exist,
-      4) Stores that info in dictionaries,
-      5) Exports final JSONs summarizing the experiment data.
+    Class for managing experiment cohorts, checking raw and processed data files,
+    and providing access to session information.
+    
+    This updated version checks for NWB files and includes them as processing requirements.
     """
 
     def __init__(self, cohort_directory, multi=False):
@@ -46,7 +39,7 @@ class Cohort_folder_openfield:
         # Main initialization steps
         self.find_mice()
         self.check_raw_data()
-        self.check_for_preliminary_analysis()
+        self.check_for_processed_data()
         self.make_concise_cohort_logs()
 
         # Save the final JSONs
@@ -55,10 +48,7 @@ class Cohort_folder_openfield:
     def get_session(self, session_id, concise=False):
         """
         Returns the dictionary for a given session ID.
-        If 'concise=True', returns the entry from self.cohort_concise
-        (i.e., from 'complete_data' or 'incomplete_data'),
-        otherwise returns the entry from self.cohort['mice'].
-
+        
         Args:
             session_id (str): The session ID to find.
             concise (bool): If True, return from the 'concise' dictionary; otherwise return full.
@@ -84,8 +74,7 @@ class Cohort_folder_openfield:
 
     def find_mice(self):
         """
-        Searches for session folders within the top-level folder. 
-        The identification logic is simplified for this new experiment.
+        Searches for session folders within the top-level folder.
         """
         print(f"Finding mice/session folders in {self.cohort_directory}")
 
@@ -111,8 +100,8 @@ class Cohort_folder_openfield:
         # Build the cohort dictionary
         for sess_folder in session_folders:
             session_id = sess_folder.name
-            # For instance, parse mouse ID from session_id
-            mouse_id = session_id[14:]  # e.g., "240315_123456_mouseX" => "mouseX"
+            # Parse mouse ID from session_id
+            mouse_id = session_id[14:]  # e.g., "250225_175234_mtaq14-1c" => "mtaq14-1c"
 
             if mouse_id not in self.cohort["mice"]:
                 self.cohort["mice"][mouse_id] = {"sessions": {}}
@@ -121,7 +110,8 @@ class Cohort_folder_openfield:
             self.cohort["mice"][mouse_id]["sessions"][session_id] = {
                 "directory": str(sess_folder),
                 "mouse_id": mouse_id,
-                "session_id": session_id
+                "session_id": session_id,
+                "portable": True  # Add portable flag for session class
             }
 
     def check_raw_data(self):
@@ -162,34 +152,40 @@ class Cohort_folder_openfield:
                 # Attach to the session
                 session_dict["raw_data"] = raw_data
 
-    def check_for_preliminary_analysis(self):
+    def check_for_processed_data(self):
         """
-        Optional: check for any 'post-processed' files that indicate 
-        preliminary analysis has been done. For example, if you produce 
-        'head_sensor_synced.json' after data alignment, check for that.
+        Check for processed data files that indicate analysis has been done,
+        including NWB files.
         """
-        print("Checking for preliminary analysis products...")
+        print("Checking for processed data files...")
         for mouse_id, mouse_data in self.cohort["mice"].items():
             for session_id, session_dict in mouse_data["sessions"].items():
                 session_path = Path(session_dict["directory"])
                 processed_data = {}
-                # We'll assume there's a single indicator file for now:
-                # e.g. 'head_sensor_synced.json'
-                indicator_file = self.find_file(session_path, 'synced_data.json')
-
-                if indicator_file:
-                    processed_data["preliminary_analysis_done?"] = True
-                    processed_data["synced_data_file"] = str(indicator_file)
+                
+                # Check for synced data file
+                synced_data_file = self.find_file(session_path, 'synced_data.json')
+                if synced_data_file:
+                    processed_data["synced_data_file"] = str(synced_data_file)
                 else:
-                    processed_data["preliminary_analysis_done?"] = False
                     processed_data["synced_data_file"] = "None"
-
+                
+                # Check for NWB file (now looking for headtracker.nwb pattern)
+                nwb_file = self.find_file(session_path, 'headtracker.nwb')
+                if nwb_file:
+                    processed_data["NWB_file"] = str(nwb_file)
+                    processed_data["processed_data_present?"] = True
+                else:
+                    processed_data["NWB_file"] = "None"
+                    processed_data["processed_data_present?"] = False
+                
+                # Attach to the session
                 session_dict["processed_data"] = processed_data
 
     def make_concise_cohort_logs(self):
         """
         Builds a 'concise' dictionary summarizing which sessions are 
-        complete vs incomplete, similar to your original script.
+        complete vs incomplete.
         """
         print("Building concise cohort logs...")
         self.cohort_concise["complete_data"] = {}
@@ -198,12 +194,22 @@ class Cohort_folder_openfield:
         for mouse_id, mouse_data in self.cohort["mice"].items():
             for session_id, session_dict in mouse_data["sessions"].items():
                 raw_data_ok = session_dict["raw_data"].get("is_all_raw_data_present?", False)
-                # We can store minimal info, e.g. session path, which files are missing, etc.
+                processed_data_ok = session_dict["processed_data"].get("processed_data_present?", False)
+                
+                # Session is complete if both raw and processed data are present
+                is_complete = raw_data_ok and processed_data_ok
+                
+                # Create a summary with essential information
                 session_summary = {
                     "directory": session_dict["directory"],
+                    "raw_data_present": raw_data_ok,
+                    "processed_data_present": processed_data_ok,
                     "missing_files": session_dict["raw_data"]["missing_files"],
+                    "NWB_file": session_dict["processed_data"].get("NWB_file", "None"),
+                    "portable": True
                 }
-                if raw_data_ok:
+                
+                if is_complete:
                     if mouse_id not in self.cohort_concise["complete_data"]:
                         self.cohort_concise["complete_data"][mouse_id] = {}
                     self.cohort_concise["complete_data"][mouse_id][session_id] = session_summary
@@ -246,21 +252,3 @@ class Cohort_folder_openfield:
             if substring in file.name:
                 return file
         return None
-
-def main():
-    """
-    Example usage. 
-    Point it to your new experiment's folder. 
-    This script will create 'cohort_info.json' and 'concise_cohort_info.json' 
-    summarizing the sessions found and whether the key raw files exist.
-    """
-    print("Starting Cohort_folder_HeadSensor...")
-    test_dir = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output"
-    manager = Cohort_folder_openfield(cohort_directory=test_dir, multi=False)
-    print("Finished building new experiment cohort info.")
-
-    session_id = "250113_165159_test1"
-    print(manager.get_session(session_id).keys())
-
-if __name__ == "__main__":
-    main()
