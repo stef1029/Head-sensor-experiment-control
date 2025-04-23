@@ -164,55 +164,73 @@ def main():
     cohort_directories = []
 
     # 1) 2501_Pitx2_opto_inhib_headsensor
-    cohort_directory_1 = {
-        'local': Path(r"D:\2501_Pitx2_opto_inhib_headsensor"),
-        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_inhib_headsensor_Stefan"),
-        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan",
-        'rsync_local': r"/cygdrive/d/2501_Pitx2_opto_inhib_headsensor",
-        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan"
-    }
-    cohort_directories.append(cohort_directory_1)
+    # cohort_directory_1 = {
+    #     'local': Path(r"D:\2501_Pitx2_opto_inhib_headsensor"),
+    #     'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_inhib_headsensor_Stefan"),
+    #     'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan",
+    #     'rsync_local': r"/cygdrive/d/2501_Pitx2_opto_inhib_headsensor",
+    #     'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_inhib_headsensor_Stefan"
+    # }
+    # cohort_directories.append(cohort_directory_1)
 
     # 2) 2701_Pitx2_opto_excite_headsensor
-    cohort_directory_2 = {
-        'local': Path(r"D:\2701_Pitx2_opto_excite_headsensor"),
-        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
-        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
-        'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
-        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
-    }
-    cohort_directories.append(cohort_directory_2)
+    # cohort_directory_2 = {
+    #     'local': Path(r"D:\2701_Pitx2_opto_excite_headsensor"),
+    #     'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+    #     'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+    #     'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
+    #     'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    # }
+    # cohort_directories.append(cohort_directory_2)
 
     # 3) 1102_VM_opto_excite_headsensor
-    cohort_directory_3 = {
-        'local': Path(r"D:\1102_VM_opto_excite_headsensor"),
-        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\1102_VM-opto-excite-headsensor_Dan"),
-        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan",
-        'rsync_local': r"/cygdrive/d/1102_VM_opto_excite_headsensor",
-        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan"
-    }
-    cohort_directories.append(cohort_directory_3)
+    # cohort_directory_3 = {
+    #     'local': Path(r"D:\1102_VM_opto_excite_headsensor"),
+    #     'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\1102_VM-opto-excite-headsensor_Dan"),
+    #     'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan",
+    #     'rsync_local': r"/cygdrive/d/1102_VM_opto_excite_headsensor",
+    #     'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/1102_VM-opto-excite-headsensor_Dan"
+    # }
+    # cohort_directories.append(cohort_directory_3)
 
     # 4) 20250303_Pitx2_opto_excite_headsensor
-    cohort_directory_4 = {
-        'local': Path(r"d:\20250303_Pitx2_opto_excite_headsensor"),
-        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
-        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
-        'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
-        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
-    } 
-    cohort_directories.append(cohort_directory_4)
+    # cohort_directory_4 = {
+    #     'local': Path(r"d:\20250303_Pitx2_opto_excite_headsensor"),
+    #     'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+    #     'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+    #     'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
+    #     'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    # } 
+    # cohort_directories.append(cohort_directory_4)
     
     
     # 5) 20250405_Pitx2_opto_excite_headsensor
-    cohort_directory_5 = {
-        'local': Path(r"c:\20250405_Pitx2_opto_excite_headsensor"),
-        'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
-        'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
-        'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
-        'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    # cohort_directory_5 = {
+    #     'local': Path(r"c:\20250405_Pitx2_opto_excite_headsensor"),
+    #     'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+    #     'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+    #     'rsync_local': r"/cygdrive/d/2701_Pitx2_opto_excite_headsensor",
+    #     'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    # } 
+    # cohort_directories.append(cohort_directory_5)
+
+    cohort_directory = {
+        'local': Path(r"C:\DATA\250416_pitx2_stim_check"),
+        # 'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+        # 'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+        # 'rsync_local': r"/cygdrive/c/DATA/250416_pitx2_stim_check",
+        # 'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
     } 
-    cohort_directories.append(cohort_directory_5)
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"D:\250421_VM_opto_excite_headsensor"),
+        # 'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+        # 'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+        # 'rsync_local': r"/cygdrive/c/DATA/250416_pitx2_stim_check",
+        # 'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    } 
+    cohort_directories.append(cohort_directory)
 
     print("Starting main processing of multiple directories...")
 
