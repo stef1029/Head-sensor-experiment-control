@@ -19,17 +19,17 @@ if __name__ == "__main__":
     # fiber_TE = 85 # left
     # fiber_TE = 86 # right
 
-    mouse_id = "wtjp247-3c"
+    # mouse_id = "wtjp247-3c"
     # fiber_TE = 85 # left
-    fiber_TE = 84 # right
+    # fiber_TE = 84 # right
 
     # mouse_id = "mtaq16-2a"
     # fiber_TE = 88 # left
     # fiber_TE = 89 # right
 
-    # mouse_id = "mtaq16-2b"
+    mouse_id = "mtaq16-2b"
     # fiber_TE = 86 # left
-    # fiber_TE = 87 # right
+    fiber_TE = 87 # right
 
     # mouse_id = "mtaq16-2c"
     # fiber_TE = 83 # left

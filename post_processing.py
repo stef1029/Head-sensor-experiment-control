@@ -226,6 +226,15 @@ def main():
     } 
     cohort_directories.append(cohort_directory)
 
+    cohort_directory = {
+        'local': Path(r"C:\DATA\250423_opto_inhibition_SC_bilateral"),
+        # 'cephfs_mapped': Path(r"W:\2501_IMU_experiments_data\2501_Pitx2_opto_excite_headsensor_Lynn"),
+        # 'cephfs_hal': r"/cephfs2/srogers/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn",
+        # 'rsync_local': r"/cygdrive/c/DATA/250416_pitx2_stim_check",
+        # 'rsync_cephfs_mapped': r"/cygdrive/w/2501_IMU_experiments_data/2501_Pitx2_opto_excite_headsensor_Lynn"
+    } 
+    cohort_directories.append(cohort_directory)
+
     print("Starting main processing of multiple directories...")
 
     # Optional: Wait until after work hours (e.g., 10 PM) before starting
