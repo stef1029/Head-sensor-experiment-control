@@ -315,6 +315,8 @@ def headtracker_to_nwb(
             synced_roll = np.array([roll_data[i] for i in valid_indices])
             synced_pitch = np.array([pitch_data[i] for i in valid_indices])
             synced_timestamps = np.array([head_synced_timestamps[i] for i in valid_indices])
+
+            print(f"Syncing {len(message_ids)} head sensor messages with {len(synced_timestamps)} pulses...")
             
             # Create a behavioral module for head tracking data
             behavior_module = nwbfile.create_processing_module(

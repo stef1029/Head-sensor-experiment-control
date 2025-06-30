@@ -155,19 +155,19 @@ async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=
 
         # Replace the synchronous backup with the non-blocking queue-based approach
         now = time.perf_counter()
-        if now - last_backup_time >= backup_interval:
-            last_backup_time = now
-            if len(backup_buffer) > 0:  # Only queue if there's data to back up
-                backup_queue.put((backup_csv_path, list(backup_buffer)))
-                backup_buffer.clear()  # Clear buffer immediately
+        # if now - last_backup_time >= backup_interval:
+        #     last_backup_time = now
+        #     if len(backup_buffer) > 0:  # Only queue if there's data to back up
+        #         backup_queue.put((backup_csv_path, list(backup_buffer)))
+        #         backup_buffer.clear()  # Clear buffer immediately
 
         await asyncio.sleep(0)
 
     end = time.perf_counter()
 
     # Process any remaining backup data
-    if len(backup_buffer) > 0:
-        backup_queue.put((backup_csv_path, list(backup_buffer)))
+    # if len(backup_buffer) > 0:
+    #     backup_queue.put((backup_csv_path, list(backup_buffer)))
     
     # Optional: Wait for all backup operations to complete
     # backup_queue.join()

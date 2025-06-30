@@ -1,14 +1,16 @@
-
 import re
 import time
 import serial
 import keyboard
+import argparse
+from colorama import init, Fore, Back, Style
 
 from utils.calibrate_magnetometer import calibrate_magnetometer_header
 
 
 UP = "\033[A"
 CLEAR = "\033[K"
+exit_key = "del"  # Key to exit the calibration process
 
 def calibrate(port, baud_rate=57600, timeout=0.1):
     """
@@ -53,8 +55,8 @@ def calibrate(port, baud_rate=57600, timeout=0.1):
             accelerometer_values = message  # Store the last line we got
             print(UP + CLEAR + message)
             
-        # Check if user pressed 'ESC'
-        if keyboard.is_pressed('esc'):
+        # Check if user pressed 'DELETE'
+        if keyboard.is_pressed(exit_key):
             # Move to the next sensor => #on => sensor=1
             head_sensor.write(b'#on')
             head_sensor.flush()
@@ -95,7 +97,7 @@ def calibrate(port, baud_rate=57600, timeout=0.1):
             print(UP + CLEAR + f"Time remaining: {time_left:.1f}s -- {message}")
 
         # Check if we've exceeded 10s or user pressed ESC
-        if elapsed >= calibration_time or keyboard.is_pressed('esc'):
+        if elapsed >= calibration_time or keyboard.is_pressed(exit_key):
             # Finalize: send any commands to revert to angles, stop, etc.
             for _ in range(3):
                 head_sensor.write(b'#ot')
@@ -177,6 +179,7 @@ def calibrate(port, baud_rate=57600, timeout=0.1):
     # 5) RUN THE NEW MAGNETOMETER CALIBRATION FUNCTION
     # ------------------------------------------------------
     print("\nNow starting the advanced magnetometer calibration...")
+    print("Nove aroung in a twisty figure-8 pattern to calibrate, and try and fill in ellipse as best as possible.\n")
     center, transform = calibrate_magnetometer_header(
         head_sensor,
         max_samples=10000,
@@ -215,7 +218,41 @@ def calibrate(port, baud_rate=57600, timeout=0.1):
         print(f"    {{{row[0]:.8f}, {row[1]:.8f}, {row[2]:.8f}}},")
     print("};")
 
+def display_calibration_info():
+    """Display calibration information with colorful formatting"""
+    init()  # Initialize colorama
+    
+    last_calibrated = "29th April 2025 SRC"
+    
+    print("\n" + "="*60)
+    print(Fore.CYAN + Style.BRIGHT + "SENSOR CALIBRATION INFORMATION" + Style.RESET_ALL)
+    print("="*60)
+    print(Fore.GREEN + f"Last calibrated: " + Back.BLACK + Style.BRIGHT + f"{last_calibrated}" + Style.RESET_ALL)
+    print(Fore.WHITE + "NOTE: Always check that YAW values make sense - unexpected readings may indicate calibration issues." + Style.RESET_ALL)
+    print(Fore.WHITE + "To calibrate, use head_sensor_calibration_ctrl.py.\nCalibrate after any major room changes." + Style.RESET_ALL)
+    print("="*60 + "\n")
+
+last_calibrated = "29th April 2025 SRC"
+
+"""
+==========================================================================================
+IF CALIBRATING, DON'T FORGET TO UPDATE THE LAST_CALIBRATED DATE AND INITIALS IN THE SCRIPT
+==========================================================================================
+"""
+
 if __name__ == "__main__":
-    # Change this to the correct COM port
-    port = "COM24"
-    calibrate(port)
+    # Set up command-line argument parsing
+    parser = argparse.ArgumentParser(description="IMU Sensor Calibration Tool")
+    parser.add_argument("-i", "--info", action="store_true", help="Display calibration information")
+    parser.add_argument("-p", "--port", default="COM24", help="Serial port to use (default: COM24)")
+    args = parser.parse_args()
+    
+    # Initialize colorama
+    init()
+    
+    if args.info:
+        display_calibration_info()
+    else:
+        # Run the normal calibration process
+        calibrate(args.port)
+
