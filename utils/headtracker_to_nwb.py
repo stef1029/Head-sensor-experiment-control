@@ -206,6 +206,7 @@ def headtracker_to_nwb(
     """
     # Convert to Path objects
     session_directory = Path(session_directory)
+
     if output_directory is None:
         output_directory = session_directory
     else:
@@ -254,7 +255,7 @@ def headtracker_to_nwb(
             session_metadata = {}
     
     # Get experiment parameters from metadata or use defaults
-    rotation_angle = session_metadata.get("rotation_angle", 0)
+    rotation_angle = session_metadata.get("head_sensor_rotation_angle", 0)
     stim_times_ms = session_metadata.get("stim_times_ms", [])
     num_cycles = session_metadata.get("num_cycles", 0)
     brain_laser_power_mW = session_metadata.get("brain_laser_power_mW", 0)

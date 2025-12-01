@@ -112,7 +112,8 @@ class Cohort_folder:
                 "directory": str(sess_folder),
                 "mouse_id": mouse_id,
                 "session_id": session_id,
-                "portable": True  # Add portable flag for session class
+                "portable": True,  # Add portable flag for session class
+                "body_sensor": self.body_sensor
             }
 
     def check_raw_data(self):

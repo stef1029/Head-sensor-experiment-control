@@ -20,11 +20,14 @@ class Analysis_manager_openfield:
         # Basic attributes
         self.session_id = session_dict.get("session_id")
         self.session_dir = Path(session_dict.get("directory", ""))
+        self.body_sensor = session_dict.get("body_sensor", False)
 
         # Retrieve file paths from "raw_data" dict
         raw_data = session_dict.get("raw_data", {})
         self.arduino_daq_h5 = Path(raw_data.get("arduino_daq_h5", ""))
         self.head_sensor_h5 = Path(raw_data.get("head_sensor_h5", ""))
+        if self.body_sensor:
+            self.body_sensor_h5 = Path(raw_data.get("body_sensor_h5", ""))
         
         # Add path for tracker data JSON
         self.tracker_json = self.session_dir / f"{self.session_id}_Tracker_data.json"
@@ -174,6 +177,9 @@ class Analysis_manager_openfield:
         """
         # Get pulse times for head sensor and camera channels
         head_sensor_pulses, _ = self.get_sync_pulses('HEADSENSOR_SYNC')
+        if self.body_sensor:
+            body_sensor_pulses, _ = self.get_sync_pulses('BODYSENSOR_SYNC')
+
         camera_pulses, _ = self.get_sync_pulses('CAMERA_SYNC')
         
         # Get laser events (rising and falling edges)
@@ -181,23 +187,43 @@ class Analysis_manager_openfield:
 
         # Sync head sensor data
         head_sensor_data = self.sync_head_sensor_data(head_sensor_pulses)
+        if self.body_sensor:
+            body_sensor_data = self.sync_head_sensor_data(body_sensor_pulses)
         
         # Sync camera frame data
         camera_data = self.sync_camera_data(camera_pulses)
 
         # Combine all synced data
-        synced_data = {
-            "session_id": self.session_id,
-            "head_sensor": {
-                "pulse_times": head_sensor_pulses.tolist(),
-                **head_sensor_data
-            },
-            "camera": {
-                "pulse_times": camera_pulses.tolist(),
-                **camera_data
-            } if camera_data is not None else None,
-            "laser": laser_events
-        }
+        if self.body_sensor:
+            synced_data = {
+                "session_id": self.session_id,
+                "head_sensor": {
+                    "pulse_times": head_sensor_pulses.tolist(),
+                    **head_sensor_data
+                },
+                "body_sensor": {
+                    "pulse_times": body_sensor_pulses.tolist(),
+                    **body_sensor_data
+                },
+                "camera": {
+                    "pulse_times": camera_pulses.tolist(),
+                    **camera_data
+                } if camera_data is not None else None,
+                "laser": laser_events
+            }
+        else:
+            synced_data = {
+                "session_id": self.session_id,
+                "head_sensor": {
+                    "pulse_times": head_sensor_pulses.tolist(),
+                    **head_sensor_data
+                },
+                "camera": {
+                    "pulse_times": camera_pulses.tolist(),
+                    **camera_data
+                } if camera_data is not None else None,
+                "laser": laser_events
+            }
 
         return synced_data
 

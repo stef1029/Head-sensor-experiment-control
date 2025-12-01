@@ -159,24 +159,56 @@ class ExperimentControl:
         create_end_signal(self.output_path, "behaviour_control")
 
     def save_metadata(self, 
-                      set_laser_power, 
-                      brain_laser_power, 
-                      stim_times_ms, 
-                      num_cycles, 
-                      stim_delay,
-                      notes):
+                        output_folder,
+                        mouse_id,
+                        channel_list,
+                        camera_serial_number="24174020",
+                        camera_fps=30,
+                        video_window_width=640,
+                        video_window_height=512,
+                        set_laser_powers=None, 
+                        brain_laser_powers=None,
+                        stim_times_ms=None,
+                        num_cycles=None,
+                        stim_delay=None,
+                        pulse_freq=0,
+                        pulse_on_time=50,
+                        head_sensor_rotation_angle=90,
+                        body_sensor_rotation_angle=0,
+                        notes="",
+                        run_head_sensor=True,
+                        run_body_sensor=False,
+                        run_camera=True,
+                        run_arduino_daq=True,
+                        run_stim_board=True
+                      ):
         metadata_filename = os.path.join(self.output_path, f"{self.foldername}_metadata.json")
 
         metadata = {
-            'mouse_id': self.mouse_id,
-            'set_laser_power_mW': set_laser_power,
-            'brain_laser_power_mW': brain_laser_power,
+            'output_folder': output_folder,
+            'mouse_id': mouse_id,
+            'channel_list': channel_list,
+            'camera_serial_number': camera_serial_number,
+            'camera_fps': camera_fps,
+            'video_window_width': video_window_width,
+            'video_window_height': video_window_height,
+            'set_laser_power_mW': set_laser_powers,
+            'brain_laser_power_mW': brain_laser_powers,
             'stim_times_ms': stim_times_ms,
             'num_cycles': num_cycles,
             'stim_delay': stim_delay,
+            'pulse_freq': pulse_freq,
+            'pulse_on_time': pulse_on_time,
+            'head_sensor_rotation_angle': head_sensor_rotation_angle,
+            'body_sensor_rotation_angle': body_sensor_rotation_angle,
             'experiment_duration': f"{round((self.end_time - self.start_time) // 60)}m "
                                    f"{round((self.end_time - self.start_time) % 60)}s",
-            'notes': notes
+            'notes': notes,
+            'run_head_sensor': run_head_sensor,
+            'run_body_sensor': run_body_sensor, 
+            'run_camera': run_camera,
+            'run_arduino_daq': run_arduino_daq,
+            'run_stim_board': run_stim_board,
         }
 
         with open(metadata_filename, 'w') as f:
@@ -320,13 +352,30 @@ class ExperimentControl:
         self.end_time = time.perf_counter()
         
         self.save_metadata(
-            set_laser_powers,
-            brain_laser_powers,
-            stim_times_ms,
-            num_cycles,
-            stim_delay,
-            notes
+            output_folder,
+            mouse_id,
+            channel_list,
+            camera_serial_number="24174020",
+            camera_fps=30,
+            video_window_width=640,
+            video_window_height=512,
+            set_laser_powers=None, 
+            brain_laser_powers=None,
+            stim_times_ms=None,
+            num_cycles=None,
+            stim_delay=None,
+            pulse_freq=0,
+            pulse_on_time=50,
+            head_sensor_rotation_angle=90,
+            body_sensor_rotation_angle=0,
+            notes="",
+            run_head_sensor=True,
+            run_body_sensor=False,
+            run_camera=True,
+            run_arduino_daq=True,
+            run_stim_board=True
         )
+
         
         self.cleanup_processes()
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Experiment finished running.\a")
