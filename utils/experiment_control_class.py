@@ -141,7 +141,7 @@ class ExperimentControl:
             "--id", self.mouse_id,
             "--date", self.date_time,
             "--path", self.output_path,
-            "--serial_number", "24174020",
+            "--serial_number", self.camera_serial_number,
             "--fps", str(self.fps),
             "--windowWidth", str(self.window_width),
             "--windowHeight", str(self.window_height)
@@ -225,6 +225,7 @@ class ExperimentControl:
         output_folder,
         mouse_id,
         channel_list,
+        camera_serial_number="24174020",
         set_laser_powers=None, 
         brain_laser_powers=None,
         stim_times_ms=None,
@@ -245,6 +246,7 @@ class ExperimentControl:
         if not isinstance(channel_list, list) or len(channel_list) != 8:
             raise ValueError("channel_list must be a list of exactly 8 channel names.")
         self.channel_list = channel_list
+        self.camera_serial_number = camera_serial_number
         
         self.run_head_sensor = run_head_sensor
         self.run_camera = run_camera
@@ -273,7 +275,7 @@ class ExperimentControl:
         
         # Start other processes
         if self.run_arduino_daq:
-            self.start_arduino_daq()
+            self.start_arduino_daq()    # Starts serial listen script/ DAQ and waits until that script makes a signal file
         if self.run_camera:
             self.start_camera_tracking()
         if self.run_head_sensor:

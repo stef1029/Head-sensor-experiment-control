@@ -200,6 +200,8 @@ if __name__ == "__main__":
         laser_port='COM11'
     )
 
+    camera_serial_number = "24174020"  # Adjust as needed
+
     # Turn items in experiment on/off
     run_head_sensor = True
     run_camera = True
@@ -243,5 +245,6 @@ if __name__ == "__main__":
         run_camera=run_camera,
         run_arduino_daq=run_arduino_daq,
         run_stim_board=run_stim_board,
-        channel_list=channel_list 
+        channel_list=channel_list,
+        camera_serial_number=camera_serial_number
     )
