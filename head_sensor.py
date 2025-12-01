@@ -17,7 +17,6 @@ from colorama import init, Fore, Back, Style
 init()
 
 import utils.angle_display_window as adw
-from utils.calibrate_magnetometer import calibrate_magnetometer_header
 from head_sensor_calibration_ctrl import calibrate
 
 baud_rate = 57600
@@ -137,9 +136,10 @@ def read_sensor(head_sensor,
                 rotation_matrix,
                 output_path,
                 save_file_name,
-                end_signal_name="head_sensor"):
+                end_signal_name,
+                sensor_location):
     
-    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Reading sensor data...")
+    print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + "Reading sensor data...")
 
     # Set up counters & buffers
     start_time = time.time()
@@ -199,10 +199,10 @@ def read_sensor(head_sensor,
                 idx = packet_buffer.find(DELIMITER)
 
         except serial.SerialException as e:
-            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, skipping message")
+            print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + f"Serial error: {e}, skipping message")
             error_messages.append([message_count, f"SerialException: {e}"])
         except UnicodeDecodeError as e:
-            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Decoding error: {e}, skipping message")
+            print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + f"Decoding error: {e}, skipping message")
             error_messages.append([message_count, f"UnicodeError: {e}"])
 
         # Check for manual stop
@@ -218,10 +218,10 @@ def read_sensor(head_sensor,
     duration = end_time - start_time
     message_rate = message_count / duration if duration > 0 else 0
 
-    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Message counter: {message_count}")
-    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Full messages: {full_messages}, reliability: "
+    print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + f"Message counter: {message_count}")
+    print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + f"Full messages: {full_messages}, reliability: "
           f"{(full_messages/message_count)*100 if message_count > 0 else 0:.2f}%")
-    print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
+    print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
 
     create_end_signal(output_path, source = end_signal_name)
 
@@ -248,7 +248,7 @@ def read_sensor(head_sensor,
         f.create_dataset('roll_data', data=roll_data)
         f.create_dataset('pitch_data', data=pitch_data)
         f.create_dataset('timestamps', data=timestamps)
-        print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Data saved to HDF5 file")
+        print(Fore.BLUE + f"{sensor_location}: " + Style.RESET_ALL + "Data saved to HDF5 file")
 
     angle_display.close()
     head_sensor.close()
@@ -298,7 +298,7 @@ def main():
             output_path = os.path.join(os.getcwd(), foldername)
             os.mkdir(output_path)
 
-        save_file_name = f"{foldername}-{args.sensor_location}_sensor_data"
+        save_file_name = f"{foldername}-{args.sensor_location.capitalize()}_sensor"
         signal_name = f"{args.sensor_location}_sensor"
 
 
@@ -311,7 +311,7 @@ def main():
         try:
             head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
         except serial.SerialException as e:
-            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Serial error: {e}, retrying connection")
+            print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + f"Serial error: {e}, retrying connection")
             time.sleep(1)
             head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
         time.sleep(2)  # Give some time for the connection to settle
@@ -324,7 +324,7 @@ def main():
         # Zero the initial values
         initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
         if np.isnan(initial_yaw):
-            print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed, trying again...")
+            print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
             time.sleep(2)
             head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
@@ -337,7 +337,7 @@ def main():
             initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
 
             if np.isnan(initial_yaw):
-                print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
+                print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
                 head_sensor.close()
                 time.sleep(2)
                 head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
@@ -360,7 +360,8 @@ def main():
                         rotation_matrix,
                         end_signal_name=signal_name,
                         output_path=output_path,
-                        save_file_name=save_file_name)
+                        save_file_name=save_file_name,
+                        sensor_location=args.sensor_location)
 
         # Start sensor reading in a separate thread
         sensor_thread = threading.Thread(target=sensor_thread, daemon=True)
@@ -377,4 +378,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print(Fore.BLUE + "Head Sensor: " + Style.RESET_ALL + "Head sensor stopped.")
+    print(Fore.BLUE + "IMU sensor control: " + Style.RESET_ALL + "Sensor stopped.")

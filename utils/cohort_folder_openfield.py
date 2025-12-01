@@ -127,11 +127,19 @@ class Cohort_folder:
 
                 # Prepare a raw_data dictionary
                 raw_data = {}
-                required_files = {
-                    "arduino_daq_h5": "ArduinoDAQ.h5",
-                    "head_sensor_h5": "Head_sensor.h5",
-                    "metadata_json": "metadata.json"
-                }
+                if self.body_sensor:
+                    required_files = {
+                        "arduino_daq_h5": "ArduinoDAQ.h5",
+                        "head_sensor_h5": "Head_sensor.h5",
+                        "body_sensor_h5": "Body_sensor.h5",
+                        "metadata_json": "metadata.json"
+                    }
+                else:
+                    required_files = {
+                        "arduino_daq_h5": "ArduinoDAQ.h5",
+                        "head_sensor_h5": "Head_sensor.h5",
+                        "metadata_json": "metadata.json"
+                    }
 
                 missing_files = []
                 all_files_ok = True
