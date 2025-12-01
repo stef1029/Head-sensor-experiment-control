@@ -38,15 +38,18 @@ async def check_signal_files(output_path, stop_event):
         if os.path.exists(output_path / "end_signal_behaviour_control.signal"):
             behaviour_signal = True
             print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received behaviour control end signal.")
-        camera_signal_path = output_path / "rig_openfield_camera_finished.signal"
-        if os.path.exists(camera_signal_path):
-            camera_signal = True
-            print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received camera end signal.")
-        head_sensor_signal_path = output_path / "end_signal_head_sensor.signal"
-        if os.path.exists(head_sensor_signal_path):
-            head_sensor_signal = True
-            print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received head sensor end signal.")
-        if behaviour_signal and camera_signal and head_sensor_signal:
+
+        # camera_signal_path = output_path / "rig_openfield_camera_finished.signal"
+        # if os.path.exists(camera_signal_path):
+        #     camera_signal = True
+        #     print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received camera end signal.")
+
+        # head_sensor_signal_path = output_path / "end_signal_head_sensor.signal"
+        # if os.path.exists(head_sensor_signal_path):
+        #     head_sensor_signal = True
+        #     print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + "Received head sensor end signal.")
+
+        if behaviour_signal:
             stop_event.set()
             break
         await asyncio.sleep(1)

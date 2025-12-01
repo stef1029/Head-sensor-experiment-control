@@ -19,12 +19,12 @@ class ExperimentControl:
         # Default COM ports (editable)
         self.stim_board_port = 'COM23'
         self.head_sensor_port = 'COM24'
+        self.body_sensor_port = 'COM6'
         self.arduino_daq_port = 'COM2'
         self.laser_port = 'COM11'
         
         self.baud_rate = 57600
         self.timeout = 2
-        self.exit_key = 'esc'
         self.stim_board = None
         self.load_config()
         
@@ -32,22 +32,7 @@ class ExperimentControl:
         self.fps = 30
         self.window_width = 640
         self.window_height = 512
-        
-        # Initialize process handlers
-        self.arduino_DAQ_process = None
-        self.camera_process = None
-        self.timer_process = None
-        self.head_sensor_process = None
-        
-        # Initialize experiment parameters
-        self.start_time = None
-        self.end_time = None
-        self.output_path = None
-        self.date_time = None
-        self.foldername = None
-        
-        # Will be assigned in run_experiment
-        self.channel_list = None
+
 
     def load_config(self):
         with open(self.config_path, "r") as file:
@@ -149,16 +134,21 @@ class ExperimentControl:
         self.camera_process = subprocess.Popen(tracker_command)
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Camera tracking started.")
 
-    def start_head_sensor(self):
-        self.head_sensor_process = subprocess.Popen([
+    def start_imu_sensor(self, port, 
+                         signal_name, 
+                         rotation_angle, 
+                         sensor_location="head"):
+        imu_process = subprocess.Popen([
             self.python_exe, self.head_sensor_script,
             '--id', self.mouse_id,
             '--date', self.date_time,
             '--path', self.output_path,
-            '--port', self.head_sensor_port,
-            '--rotation', str(self.rotation_angle)
+            '--port', port,
+            '--rotation', str(rotation_angle),
+            '--sensor_location', sensor_location,
         ])
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Head sensor script started.")
+        return imu_process
 
     def wait_for_completion(self):
         while True:
@@ -210,11 +200,13 @@ class ExperimentControl:
         
         delete_signal_files(self.output_path)
 
-    def configure_ports(self, stim_port=None, head_port=None, daq_port=None, laser_port=None):
+    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None):
         if stim_port:
             self.stim_board_port = stim_port
         if head_port:
             self.head_sensor_port = head_port
+        if body_port:
+            self.body_sensor_port = body_port
         if daq_port:
             self.arduino_daq_port = daq_port
         if laser_port:
@@ -226,6 +218,9 @@ class ExperimentControl:
         mouse_id,
         channel_list,
         camera_serial_number="24174020",
+        camera_fps=30,
+        video_window_width=640,
+        video_window_height=512,
         set_laser_powers=None, 
         brain_laser_powers=None,
         stim_times_ms=None,
@@ -233,9 +228,11 @@ class ExperimentControl:
         stim_delay=None,
         pulse_freq=0,
         pulse_on_time=50,
-        rotation_angle=90,
+        head_sensor_rotation_angle=90,
+        body_sensor_rotation_angle=0,
         notes="",
         run_head_sensor=True,
+        run_body_sensor=False,
         run_camera=True,
         run_arduino_daq=True,
         run_stim_board=True
@@ -246,9 +243,14 @@ class ExperimentControl:
         if not isinstance(channel_list, list) or len(channel_list) != 8:
             raise ValueError("channel_list must be a list of exactly 8 channel names.")
         self.channel_list = channel_list
+
         self.camera_serial_number = camera_serial_number
+        self.fps = camera_fps
+        self.window_width = video_window_width
+        self.window_height = video_window_height
         
         self.run_head_sensor = run_head_sensor
+        self.run_body_sensor = run_body_sensor
         self.run_camera = run_camera
         self.run_arduino_daq = run_arduino_daq
         self.run_stim_board = run_stim_board
@@ -263,7 +265,8 @@ class ExperimentControl:
         if set_laser_powers is None or brain_laser_powers is None:
             set_laser_powers, brain_laser_powers = self.get_laser_parameters()
 
-        self.rotation_angle = rotation_angle
+        self.head_sensor_rotation_angle = head_sensor_rotation_angle
+        self.body_sensor_rotation_angle = body_sensor_rotation_angle
         self.mouse_id = mouse_id
         self.setup_experiment_folder(output_folder, mouse_id)
 
@@ -279,7 +282,15 @@ class ExperimentControl:
         if self.run_camera:
             self.start_camera_tracking()
         if self.run_head_sensor:
-            self.start_head_sensor()
+            self.head_sensor_process = self.start_imu_sensor(port=self.head_sensor_port, 
+                                  signal_name="head_sensor",
+                                  rotation_angle=self.head_sensor_rotation_angle,
+                                  sensor_location="head",)
+        if self.run_body_sensor:
+            self.body_sensor_process = self.start_imu_sensor(port=self.body_sensor_port, 
+                                  signal_name="body_sensor",
+                                  rotation_angle=self.body_sensor_rotation_angle,
+                                  sensor_location="body",)
         
         if self.run_stim_board:
             countdown_timer(10, message="Starting laser control board")
@@ -291,16 +302,20 @@ class ExperimentControl:
                 pulse_freq=pulse_freq,
                 pulse_on_time=pulse_on_time
             )
-            self.laser_control_process.wait()
-            self.create_stim_signal()
+            self.laser_control_process.wait()   # if using laser control board, wait for it to finish
+            self.create_stim_signal()   # write signal file to indicate stim is complete
 
         if self.run_head_sensor:
-            self.head_sensor_process.wait()
-            self.stop_camera("openfield")
+            self.head_sensor_process.wait()  # wait for head sensor to finish (either via stim board signal or exit_key)
+            self.body_sensor_process.wait()  # wait for body sensor to finish (either via stim board signal or exit_key)
+            self.stop_camera("openfield")   # create signal file to stop camera recording
         if self.run_camera:
-            self.camera_process.wait()
+            self.camera_process.wait()  # wait until the camera process finishes (either via head sensor signal or exit_key)
         
         self.wait_for_completion()
+
+        self.arduino_DAQ_process.wait()  # wait until DAQ process finishes
+        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Arduino DAQ script finished.")
         
         self.end_time = time.perf_counter()
         

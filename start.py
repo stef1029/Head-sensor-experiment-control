@@ -182,11 +182,12 @@ if __name__ == "__main__":
     stim_delay = 3000
     pulse_freq = 0
     pulse_on_time = 10
-    rotation_angle = 90
+    head_sensor_rotation_angle = 90
+    body_sensor_rotation_angle = 0
     notes = ""
 
     """
-    -------------- Advanced setup (do not change): -------------------------------------------------
+    -------------- Advanced setup (do not change or things will break): -------------------------------------------------
     """
     # Initialize experiment control
     experiment = ExperimentControl(config_path)
@@ -194,16 +195,21 @@ if __name__ == "__main__":
     # Configure COM ports - ADJUST THESE AS NEEDED
     experiment.configure_ports(
         stim_port='COM23',
-        # head_port='COM24',
-        head_port='COM6',
+        head_port='COM24',
+        body_port='COM6',
         daq_port='COM19',
         laser_port='COM11'
     )
 
-    camera_serial_number = "24174020"  # Adjust as needed
+    # configure camera settings
+    camera_serial_number = "24174020" 
+    camera_fps = 30  
+    video_window_width = 640
+    video_window_height = 512
 
     # Turn items in experiment on/off
     run_head_sensor = True
+    run_body_sensor = True
     run_camera = True
     run_arduino_daq = True
     run_stim_board = True
@@ -239,12 +245,15 @@ if __name__ == "__main__":
         stim_delay=stim_delay,
         pulse_freq=pulse_freq,
         pulse_on_time=pulse_on_time,
-        rotation_angle=rotation_angle,
+        head_sensor_rotation_angle=head_sensor_rotation_angle,
+        body_sensor_rotation_angle=body_sensor_rotation_angle,
         notes=notes,
         run_head_sensor=run_head_sensor,
+        run_body_sensor=run_body_sensor,
         run_camera=run_camera,
         run_arduino_daq=run_arduino_daq,
         run_stim_board=run_stim_board,
         channel_list=channel_list,
-        camera_serial_number=camera_serial_number
+        camera_serial_number=camera_serial_number,
+        camera_fps=camera_fps
     )

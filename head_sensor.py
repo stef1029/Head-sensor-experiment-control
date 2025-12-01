@@ -81,11 +81,10 @@ def apply_rotation(yaw, roll, pitch, rotation_matrix):
     return ypr_rotated[0], ypr_rotated[1], ypr_rotated[2]
 
 
-def zero_values(timeout=1):
+def zero_values(head_sensor, timeout=1):
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Zeroing initial values...")
     start_time = time.time()
     final_values = None
-    global head_sensor
 
     while time.time() - start_time < timeout:
         try:
@@ -109,7 +108,7 @@ def zero_values(timeout=1):
 
     return final_values
 
-async def check_stim_signal(file_path, stop_event):
+async def check_stim_signal(head_sensor, file_path, stop_event):
     def exit_key_monitor():
         keyboard.wait(exit_key)
         if not stop_event.is_set():
@@ -123,14 +122,23 @@ async def check_stim_signal(file_path, stop_event):
         while not stop_event.is_set():
             if os.path.exists(file_path):
                 stop_event.set()
-                head_sensor.write(b'e')
-                head_sensor.write(b'q')
+                head_sensor.write(b'e') # send end command to Arduino
+                head_sensor.write(b'q') # restart serial connection to arduino
                 break
             await asyncio.sleep(1)  # Check every second
     finally:
         keyboard.unhook_all()
 
-def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotation_matrix):
+def read_sensor(head_sensor,
+                initial_yaw, 
+                initial_roll, 
+                initial_pitch, 
+                angle_display, 
+                rotation_matrix,
+                output_path,
+                save_file_name,
+                end_signal_name="head_sensor"):
+    
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Reading sensor data...")
 
     # Set up counters & buffers
@@ -148,7 +156,7 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotatio
 
     # Start signal file check task
     stim_signal_path = os.path.join(output_path, "stim_complete.signal")
-    loop.create_task(check_stim_signal(stim_signal_path, stop_event))
+    loop.create_task(check_stim_signal(head_sensor, stim_signal_path, stop_event))       # check either for stim complete signal or manual stop with exit_key
 
     while not stop_event.is_set():
         try:
@@ -215,18 +223,9 @@ def read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotatio
           f"{(full_messages/message_count)*100 if message_count > 0 else 0:.2f}%")
     print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + f"Time taken: {duration:.2f}s, rate: {message_rate:.2f} messages/s")
 
-    create_end_signal(output_path, source = "head_sensor")
+    create_end_signal(output_path, source = end_signal_name)
 
     # Save everything
-    save_data(
-        message_ids, yaw_data, roll_data, pitch_data, timestamps,
-        full_messages, message_count, duration, error_messages
-    )
-
-    angle_display.close()
-    head_sensor.close()
-
-def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_messages, message_count, duration, error_messages):
     data_to_save = {
         "time": str(datetime.now()),
         "No. of messages": message_count,
@@ -251,10 +250,21 @@ def save_data(message_ids, yaw_data, roll_data, pitch_data, timestamps, full_mes
         f.create_dataset('timestamps', data=timestamps)
         print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Data saved to HDF5 file")
 
+    angle_display.close()
+    head_sensor.close()
 
 def main():
 
-    angle_display = adw.AngleDisplay()
+    parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
+    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')
+    parser.add_argument('--id', type=str, help='mouse ID')
+    parser.add_argument('--date', type=str, help='date_time')
+    parser.add_argument('--path', type=str, help='path')
+    parser.add_argument('--rotation', type=float, default=90, help='Rotation angle in degrees')
+    parser.add_argument('--sensor_location', type=str, default='head', help='Location of the sensor (e.g., head, body)')
+    args = parser.parse_args()
+
+    angle_display = adw.AngleDisplay(window_title=f"{args.sensor_location.capitalize()} Sensor Angles")
 
     # Create and start the display thread
     def run_display():
@@ -266,18 +276,11 @@ def main():
     display_thread = threading.Thread(target=run_display, daemon=True)
     display_thread.start()
 
-    parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
-    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')
-    parser.add_argument('--id', type=str, help='mouse ID')
-    parser.add_argument('--date', type=str, help='date_time')
-    parser.add_argument('--path', type=str, help='path')
-    parser.add_argument('--rotation', type=float, default=90, help='Rotation angle in degrees')  # Add rotation parameter
-    args = parser.parse_args()
+
 
     # Only run code below if run from command line with args:
     if len(sys.argv) > 1:
 
-        global output_path
         if args.id is not None:
             mouse_ID = args.id
         else:
@@ -295,8 +298,9 @@ def main():
             output_path = os.path.join(os.getcwd(), foldername)
             os.mkdir(output_path)
 
-        global save_file_name
-        save_file_name = f"{foldername}-Head_sensor"
+        save_file_name = f"{foldername}-{args.sensor_location}_sensor_data"
+        signal_name = f"{args.sensor_location}_sensor"
+
 
         rotation_angle_degrees = args.rotation
         rotation_angle = np.radians(rotation_angle_degrees)
@@ -304,7 +308,6 @@ def main():
         rotation_matrix = create_rotation_matrix(rotation_axis, rotation_angle)
 
         # Initialize serial connections
-        global head_sensor
         try:
             head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
         except serial.SerialException as e:
@@ -319,7 +322,7 @@ def main():
         head_sensor.flush()  # Ensure the command is transmitted
 
         # Zero the initial values
-        initial_yaw, initial_roll, initial_pitch = zero_values()
+        initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
         if np.isnan(initial_yaw):
             print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
@@ -331,7 +334,7 @@ def main():
             # Send start command to Arduino
             head_sensor.write(b's')
             head_sensor.flush()  # Ensure the command is transmitted
-            initial_yaw, initial_roll, initial_pitch = zero_values()
+            initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
 
             if np.isnan(initial_yaw):
                 print(Fore.BLUE + "Head Sensor:" + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
@@ -344,12 +347,20 @@ def main():
                 # Send start command to Arduino
                 head_sensor.write(b's')
                 head_sensor.flush()  # Ensure the command is transmitted
-                initial_yaw, initial_roll, initial_pitch = zero_values()
+                initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
 
         # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
 
         def sensor_thread():
-            read_sensor(initial_yaw, initial_roll, initial_pitch, angle_display, rotation_matrix)
+            read_sensor(head_sensor,
+                        initial_yaw, 
+                        initial_roll, 
+                        initial_pitch, 
+                        angle_display, 
+                        rotation_matrix,
+                        end_signal_name=signal_name,
+                        output_path=output_path,
+                        save_file_name=save_file_name)
 
         # Start sensor reading in a separate thread
         sensor_thread = threading.Thread(target=sensor_thread, daemon=True)

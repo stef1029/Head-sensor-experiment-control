@@ -12,7 +12,7 @@ class Cohort_folder:
     This updated version checks for NWB files and includes them as processing requirements.
     """
 
-    def __init__(self, cohort_directory, multi=False):
+    def __init__(self, cohort_directory, multi=False, body_sensor=True):
         """
         Args:
             cohort_directory (str or Path): Path to the folder containing all sessions.
@@ -22,6 +22,7 @@ class Cohort_folder:
         """
         self.cohort_directory = Path(cohort_directory)
         self.multi = multi
+        self.body_sensor = body_sensor
 
         # Basic directory check
         if not self.cohort_directory.exists():

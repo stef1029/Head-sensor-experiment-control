@@ -4,10 +4,10 @@ import queue
 from queue import Queue
 
 class AngleDisplay:
-    def __init__(self):
+    def __init__(self, window_title="Head Sensor Angles"):
         self.root = tk.Tk()
-        self.root.title("Head Sensor Angles")
-        self.root.geometry("800x100")  # Increased height and width
+        self.root.title(window_title)
+        self.root.geometry("800x100") 
         
         # Configure styles for the labels
         style = ttk.Style()
@@ -18,7 +18,7 @@ class AngleDisplay:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(expand=True)
         
-        # Fixed size for each box
+        # Size for each box
         box_width = 200
         box_height = 80
         
