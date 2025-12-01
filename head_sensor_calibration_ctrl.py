@@ -244,7 +244,6 @@ if __name__ == "__main__":
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(description="IMU Sensor Calibration Tool")
     parser.add_argument("-i", "--info", action="store_true", help="Display calibration information")
-    parser.add_argument("-p", "--port", default="COM24", help="Serial port to use (default: COM24)")
     args = parser.parse_args()
     
     # Initialize colorama
@@ -254,5 +253,5 @@ if __name__ == "__main__":
         display_calibration_info()
     else:
         # Run the normal calibration process
-        calibrate(args.port)
+        calibrate("COM6")  # Adjust COM port as needed
 
