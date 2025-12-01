@@ -18,68 +18,24 @@ if __name__ == "__main__":
     """
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
-    # mouse_id = "mtaq11-3a"
-    # fiber_TE = 80
 
-    # mouse_id = "wtjp247-3a"
-    # fiber_TE = 82 # left
-    # fiber_TE = 83 # right
+    mouse_id = "test"
+    fiber_TE = 92
 
-    # mouse_id = "wtjp247-3b"
-    # fiber_TE = 85 # left
-    # fiber_TE = 86 # right
-
-    # mouse_id = "wtjp247-3c"
-    # fiber_TE = 85 # left
-    # fiber_TE = 84 # right
-
-    # mouse_id = "mtaq16-2a"
-    # fiber_TE = 88 # left
-    # fiber_TE = 89 # right
-
-    # mouse_id = "mtaq16-2b"
-    # fiber_TE = 86 # left
-    # fiber_TE = 87 # right
-
-    # mouse_id = "mtaq16-2c"
-    # fiber_TE = 83 # left
-    # fiber_TE = 87 # right
-
-    # mouse_id = "mtaq16-2d"
-    # fiber_TE = 85 # left
-    # fiber_TE = 86 # right
+    # patch_cord_TE = 30 # 2025-09-24
+    # patch_cord_TE = 64 # actual value
+    # patch_cord_TE = 5 # Dan's one-time funky value
+    # patch_cord_TE = 71 # Dan's value post-rotary joint
+    # patch_cord_TE = 30 # cord 7 on array
+    # patch_cord_TE = 34 # cord 1 on array
+    # patch_cord_TE = 35 # cord 9 on array
+    # patch_cord_TE = 40 # cord 6 on array
+    patch_cord_TE = 20 # 2025-10-31
 
 
-    # mouse_id = "mtaq14-1g"
-    # fiber_TE = 82
-
-    # mouse_id = "mtaq13-3a"
-    # fiber_TE = 80
-
-    # mouse_id = "mtaq11-3b"
-    # fiber_TE = 80
-
-    # mouse_id = "mtbz8-3a"
-    # fiber_TE = 80
-
-    # mouse_id = "mtbz8-3b"
-    # fiber_TE = 80
-
-    # mouse_id = "mtaq14-1b"    
-    # fiber_TE = 91
-
-    # mouse_id = "mtaq14-1c"    
-    # fiber_TE = 70
-
-    mouse_id = "mtbz8-3c"    
-    fiber_TE = 85
-
-    # mouse_id = "test2"
-    # fiber_TE = 94
 
 
-    # patch_cord_TE = 59 # lynn's value
-    patch_cord_TE = 64 # actual value
+
 
     """
     Chip direction selection (rotation angle):
@@ -92,6 +48,77 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
+    # output_folder = r"C:\DATA\251031_opto_Pitx2_excite_medulla"
+    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10, 15]   
+    # # stim_times_ms = [250] 
+    # at_brain_power_levels = [10]   
+    # stim_times_ms = [1000]       
+    # num_cycles = 70
+    # stim_delay = 5000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # # rotation_angle = 90 # chip backward
+    # notes = "Pitx2::ChR2 fibers in pons, visual movement check"
+
+    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
+    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10, 15]   
+    # # stim_times_ms = [250] 
+    # at_brain_power_levels = [10]   
+    # stim_times_ms = [1000]       
+    # num_cycles = 3600
+    # stim_delay = 1000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # # rotation_angle = 90 # chip backward
+    # notes = "Pitx2 Chemogenetics: Baseline movement recording"
+
+    
+    # output_folder = r"c:\DATA\Pitx2_CatCh_Excite"
+    # at_brain_power_levels = [0.1, 0.5, 1, 3, 5]      
+    # stim_times_ms = [250, 1000]    
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # rotation_angle = 90 # chip backward
+    # notes = "mtdl1.2c - Pitx2::CatCh test, forward chip, soft pilot"
+
+    # output_folder = r"C:\DATA\251008_Pitx2-Catch-Array"
+    # at_brain_power_levels = [0.1, 0.5, 1, 2, 3, 5, 7]      
+    # stim_times_ms = [250]    
+    # num_cycles = 70
+    # stim_delay = 5000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # # rotation_angle = 90 # chip backward
+    # notes = "Pitx2::CatCh test for array & head movement, forward chip, fibre #6"
+
+    # output_folder = r"c:\DATA\250806_Pitx2_cFOS_opt"
+    # at_brain_power_levels = [10]      
+    # stim_times_ms = [1000]    
+    # num_cycles = 600
+    # stim_delay = 2000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # rotation_angle = 90 # chip backward
+    # notes = "Pitx2::ChR2 test for cFOS expression, forward chip, soft pilot"
+
+
+    # output_folder = r"C:\DATA\Pitx2_Chemo_Baseline_Movements"
+    # at_brain_power_levels = [0]      
+    # stim_times_ms = [900000]    
+    # num_cycles = 1
+    # stim_delay = 0
+    # pulse_freq = 0
+    # pulse_on_time = 0
+    # rotation_angle = 0 # chip backward
+    # notes = "mtao102-3c - test, uPSEM 817"
+
     # output_folder = r"C:\DATA\250515_opto_excite_Pitx2_VM"
     # at_brain_power_levels = [1, 5, 10, 20, 30]      
     # stim_times_ms = [100, 250, 500, 1000]    
@@ -102,15 +129,15 @@ if __name__ == "__main__":
     # rotation_angle = 90 # chip backward
     # notes = "mtaq14.1c - VM ctrl, backward chip"
 
-    output_folder = r"C:\DATA\250603_opto_excite_SC_sst"
-    at_brain_power_levels = [1, 3, 5, 10, 20]      
-    stim_times_ms = [100, 250, 500, 1000]    
-    num_cycles = 50
-    stim_delay = 5000
-    pulse_freq = 30
-    pulse_on_time = 10
-    rotation_angle = 180 # chip backward
-    notes = "mtbz8.3c - ChR2 in SC sst vGAT neurons, right chip"
+    # output_folder = r"C:\DATA\250603_opto_excite_SC_sst"
+    # at_brain_power_levels = [1, 3, 5, 10, 20]      
+    # stim_times_ms = [100, 250, 500, 1000]    
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # rotation_angle = 180 # chip backward
+    # notes = "mtbz8.3c - ChR2 in SC sst vGAT neurons, right chip"
 
     # output_folder = r"c:\20250405_Pitx2_opto_excite_headsensor"
     # at_brain_power_levels = [1, 3, 5, 10, 15, 20, 30]      
@@ -148,15 +175,15 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"D:\test_output"
-    # at_brain_power_levels = [5]      
-    # stim_times_ms = [2000]    
-    # num_cycles = 5
-    # stim_delay = 3000
-    # pulse_freq = 0
-    # pulse_on_time = 10
-    # rotation_angle = 90
-    # notes = ""
+    output_folder = r"D:\test_output"
+    at_brain_power_levels = [5]      
+    stim_times_ms = [2000]    
+    num_cycles = 5
+    stim_delay = 3000
+    pulse_freq = 0
+    pulse_on_time = 10
+    rotation_angle = 90
+    notes = ""
 
     """
     -------------- Advanced setup (do not change): -------------------------------------------------
@@ -167,9 +194,10 @@ if __name__ == "__main__":
     # Configure COM ports - ADJUST THESE AS NEEDED
     experiment.configure_ports(
         stim_port='COM23',
-        head_port='COM24',
+        # head_port='COM24',
+        head_port='COM6',
         daq_port='COM19',
-        laser_port='COM26'
+        laser_port='COM11'
     )
 
     # Turn items in experiment on/off
