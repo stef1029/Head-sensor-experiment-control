@@ -1,8 +1,7 @@
 {
-    "TIMER_SCRIPT": "C:\\dev\\projects\\Head-sensor-experiment-control\\utils\\timer.py",
-    "PYTHON_PATH": "C:\\Users\\Tripodi Group\\.conda\\envs\\2407_July_WT_behaviour_control\\python.exe",
-    "SERIAL_LISTEN": "C:\\dev\\projects\\Head-sensor-experiment-control\\arduino_daq_giga_listen.py",
-    "BEHAVIOUR_CAMERA": "C:\\Behaviour\\Camera\\x64\\Release\\Camera_to_binary.exe",
-    "HEAD_SENSOR_SCRIPT": "C:\\dev\\projects\\Head-sensor-experiment-control\\head_sensor.py",
-    "LASER_CONTROL_SCRIPT": "C:\\dev\\projects\\Head-sensor-experiment-control\\laser_control.py"
+    "SENDKEY_FOLDER": "C:\\Behaviour\\Sendkey_multi\\Sendkey-multi_2",
+    "TIMER_SCRIPT": "C:\\Behaviour\\Sendkey_multi\\Sendkey-multi_2\\timer.py",
+    "PYTHON_PATH": "C:\\Users\\Public\\.conda\\July_cohort\\python.exe",
+    "SERIAL_LISTEN": "C:\\Behaviour\\Sendkey_multi\\Sendkey-multi_2\\Scripts\\serialListen.py",
+    "BEHAVIOUR_CAMERA": "C:\\Behaviour\\Camera\\x64\\Release\\Camera.exe"
 }

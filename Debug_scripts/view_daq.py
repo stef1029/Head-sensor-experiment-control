@@ -47,13 +47,8 @@ def plot_multiple_channels(arduino_daq_h5_path, channel_names):
 def main():
     # === Fill in these variables ===
     # Provide the path to your ArduinoDAQ .h5 file
-    # arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250409_123655_mtaq15-1b\250409_123655_mtaq15-1b-ArduinoDAQ.h5"
-    # arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250416_041917_WTJP288-1a\250416_041917_WTJP288-1a-ArduinoDAQ.h5"
-    # arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250405_112904_mtaq15-1a\250405_112904_mtaq15-1a-ArduinoDAQ.h5"
-    # arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250405_153736_mtaq11-2b\250405_153736_mtaq11-2b-ArduinoDAQ.h5"
-    # arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250418_113759_mtaq15-3b\250418_113759_mtaq15-3b-ArduinoDAQ.h5"
-    arduino_daq_h5_path = r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC\250418_125704_mtaq15-1e\250418_125704_mtaq15-1e-ArduinoDAQ.h5"
-
+    arduino_daq_h5_path = r"D:\2104_VM_opto_excite_headsensor\250421_120716_mtaq14-1a\250421_120716_mtaq14-1a-ArduinoDAQ.h5"
+    
     # List all channels you want to plot
     channel_names = ["CAMERA_SYNC", "HEADSENSOR_SYNC", "LASER_SYNC"]  # Add or modify channels as needed
 

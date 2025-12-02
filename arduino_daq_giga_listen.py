@@ -18,7 +18,7 @@ import tkinter as tk
 from colorama import init, Fore, Style
 init()
 
-exit_key = "esc"
+exit_key = "del"
 test = False
 
 async def check_signal_files(output_path, stop_event):
@@ -57,6 +57,29 @@ async def check_signal_files(output_path, stop_event):
 async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=None, port=None):
     messages_from_arduino = deque()
     backup_buffer = deque()
+    
+    # Create a backup worker thread and queue for non-blocking file operations
+    from queue import Queue
+    backup_queue = Queue()
+    
+    def backup_worker():
+        while True:
+            item = backup_queue.get()
+            if item is None:  # Exit signal
+                break
+            path, data = item
+            try:
+                with open(path, 'a', newline='') as csvfile:
+                    csv_writer = csv.writer(csvfile)
+                    csv_writer.writerows(data)
+            except Exception as e:
+                print(f"Error in backup thread: {e}")
+            finally:
+                backup_queue.task_done()
+    
+    # Start the backup thread as a daemon (will auto-terminate when main program exits)
+    backup_thread = threading.Thread(target=backup_worker, daemon=True)
+    backup_thread.start()
     
     if new_mouse_ID is None:
         mouse_ID = input(r"Enter mouse ID: ")
@@ -126,25 +149,28 @@ async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=
                 messages_from_arduino.append([msgNum, state, current_time])
                 backup_buffer.append([msgNum, state, current_time])
                 full_messages += 1
-
-                # print(f"Time: {current_time:.6f} ID: {msgNum:032b} Data: {state:08b}")
             else:
                 error_messages.append([message_counter, message.hex(), current_time])
-                # print(f"Error: {message_counter} {message.hex()} {current_time:.6f}")
             message_counter += 1
-                # print message as binary number: ----- SERIAL MONITOR -----
-                # print(f"Time: {current_time:.6f} ID: {original_message_ID:032b} Data: {original_message:040b}")
 
-
+        # Replace the synchronous backup with the non-blocking queue-based approach
         now = time.perf_counter()
-        if now - last_backup_time >= backup_interval:
-            last_backup_time = now
-            if save_to_backup_csv(backup_csv_path, list(backup_buffer)):
-                backup_buffer.clear()
+        # if now - last_backup_time >= backup_interval:
+        #     last_backup_time = now
+        #     if len(backup_buffer) > 0:  # Only queue if there's data to back up
+        #         backup_queue.put((backup_csv_path, list(backup_buffer)))
+        #         backup_buffer.clear()  # Clear buffer immediately
 
         await asyncio.sleep(0)
 
     end = time.perf_counter()
+
+    # Process any remaining backup data
+    # if len(backup_buffer) > 0:
+    #     backup_queue.put((backup_csv_path, list(backup_buffer)))
+    
+    # Optional: Wait for all backup operations to complete
+    # backup_queue.join()
 
     for _ in range(3):
         ser.write(b"e")
@@ -164,6 +190,8 @@ async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=
     )
 
     ser.close()
+
+
 
 def save_to_hdf5_and_json(foldername, output_path, mouse_ID, date_time, messages_from_arduino,
                           message_counter, full_messages, start, end, error_messages,

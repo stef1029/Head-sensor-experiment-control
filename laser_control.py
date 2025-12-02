@@ -6,11 +6,41 @@ import serial
 import keyboard
 from colorama import init, Fore, Style
 init()
+exit_key = 'del'
+
+# def calculate_total_duration(powers, stim_times, num_cycles, stim_delay):
+#     """Calculate estimated total duration in minutes"""
+#     # Time for one complete cycle of all stim durations
+#     one_cycle_time = sum(stim_times) + (len(stim_times) * stim_delay)
+    
+#     # Total time for all cycles at one power level
+#     one_power_time = one_cycle_time * num_cycles
+    
+#     # Total time for all power levels
+#     total_time_ms = one_power_time * len(powers)
+    
+#     # Add setup time estimates (laser init, power changes, etc)
+#     setup_time_ms = 10000  # 10 seconds for initial setup
+#     power_change_time_ms = 2000 * (len(powers) - 1)  # 2 seconds per power change
+    
+#     total_time_ms += setup_time_ms + power_change_time_ms
+    
+#     # Convert to minutes
+#     total_minutes = total_time_ms / (1000 * 60)
+    
+#     return total_minutes
+
+# Fix to account for incorrect timing in arduino code: 
+# Above is how it should be so keep that code for the future
 
 def calculate_total_duration(powers, stim_times, num_cycles, stim_delay):
-    """Calculate estimated total duration in minutes"""
-    # Time for one complete cycle of all stim durations
-    one_cycle_time = sum(stim_times) + (len(stim_times) * stim_delay)
+    """Calculate estimated total duration in minutes based on pulses every stim_delay seconds"""
+    # For each stimulus time in a cycle
+    one_cycle_time = 0
+    
+    for i in range(len(stim_times)):
+        # Each stimulus is sent every stim_delay seconds regardless of stimulus duration
+        one_cycle_time += stim_delay
     
     # Total time for all cycles at one power level
     one_power_time = one_cycle_time * num_cycles
@@ -33,33 +63,52 @@ def wait_for_key(laser, timeout=30):
     """Wait for the key to be turned, with timeout in seconds"""
     print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + Fore.BLUE + "\nWaiting for laser key. Toggle key on box to continue..." + Style.RESET_ALL)
     start_time = time.time()
+    last_check_time = 0
+    check_interval = 0.3  # Check every 300ms
     
     while time.time() - start_time < timeout:
-        if keyboard.is_pressed('esc'):
+        current_time = time.time()
+        
+        if keyboard.is_pressed(exit_key):
             return False
-        state = laser.get_state()
-        if state != "1 - Waiting for key":
-            return True
-        time.sleep(1)
+        
+        # Only check laser state every check_interval seconds
+        if current_time - last_check_time >= check_interval:
+            state = laser.get_state()
+            last_check_time = current_time
+            if state != "1 - Waiting for key":
+                return True
+            
+        time.sleep(0.1)
     return False
 
 def read_arduino_output(arduino, timeout=1):
-    """Read all available output from Arduino with timeout"""
+    """Read all available output from Arduino with timeout, checking less frequently"""
     start_time = time.time()
     response = ""
+    last_check_time = 0
+    check_interval = 0.3  # Check Arduino input every 300ms
+    
     while (time.time() - start_time) < timeout:
-        if keyboard.is_pressed('esc'):
-            return "esc_pressed"
-        if arduino.in_waiting:
-            try:
-                new_data = arduino.readline().decode().strip()
-                print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {new_data}")
-                if new_data == "params_received" or new_data == "e":
-                    response = new_data
-            except UnicodeDecodeError:
-                pass
+        current_time = time.time()
+        
+        if keyboard.is_pressed(exit_key):
+            return "exit_key_pressed"
+        
+        # Only check for Arduino input every check_interval seconds
+        if current_time - last_check_time >= check_interval:
+            last_check_time = current_time
+            if arduino.in_waiting:
+                try:
+                    new_data = arduino.readline().decode().strip()
+                    print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {new_data}")
+                    if new_data == "params_received" or new_data == "e":
+                        response = new_data
+                except UnicodeDecodeError:
+                    pass
         else:
             time.sleep(0.1)
+            
     return response
 
 def setup_arduino(arduino_port, stim_times, num_cycles, stim_delay, pulse_freq, pulse_on_time):
@@ -97,9 +146,9 @@ def setup_arduino(arduino_port, stim_times, num_cycles, stim_delay, pulse_freq, 
         time.sleep(0.001)
     
     response = read_arduino_output(arduino)
-    if response == "esc_pressed":
+    if response == "exit_key_pressed":
         arduino.close()
-        raise KeyboardInterrupt("ESC pressed")
+        raise KeyboardInterrupt("Exit key pressed")
     if "params_received" not in response:
         raise RuntimeError("Failed to initialize Arduino")
     
@@ -157,7 +206,7 @@ def main():
         else:
             print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + 
                   f"Pulse frequency: {args.pulse_freq} Hz, on time: {args.pulse_on_time}ms")
-        print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + f"Press ESC at any time to stop the sequence\n")
+        print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + f"Press DELETE at any time to stop the sequence\n")
 
         # Initialize laser
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "Initializing laser...")
@@ -190,19 +239,28 @@ def main():
             time.sleep(1)
             arduino.write(b"s")
             
+            last_check_time = 0
+            check_interval = 0.3  # Check Arduino input every 300ms
+            
             while True:
-                if keyboard.is_pressed('esc'):
-                    print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "\nESC pressed - stopping stimulation")
-                    raise KeyboardInterrupt("ESC pressed")
+                current_time = time.time()
                 
-                if arduino.in_waiting:
-                    try:
-                        response = arduino.readline().decode().strip()
-                        print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {response}")
-                        if response == 'e':
-                            break
-                    except UnicodeDecodeError:
-                        pass
+                if keyboard.is_pressed(exit_key):
+                    print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "\nDEL pressed - stopping stimulation")
+                    raise KeyboardInterrupt("DEL pressed")
+                
+                # Only check for Arduino input every check_interval seconds
+                if current_time - last_check_time >= check_interval:
+                    last_check_time = current_time
+                    if arduino.in_waiting:
+                        try:
+                            response = arduino.readline().decode().strip()
+                            print(Fore.YELLOW + "Arduino:" + Style.RESET_ALL + f" {response}")
+                            if response == 'e':
+                                break
+                        except UnicodeDecodeError:
+                            pass
+                
                 time.sleep(0.1)
         
         print(Fore.GREEN + "Laser control:" + Style.RESET_ALL + "\nSequence complete - shutting down...")

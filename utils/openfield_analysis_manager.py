@@ -127,8 +127,10 @@ class Analysis_manager_openfield:
         # Build pulse dictionary
         pulse_dict = {i: pulse_time for i, pulse_time in enumerate(pulse_times)}
 
+        # Print the number of head sensor messages being synced
+        print(f"Syncing {len(message_ids)} head sensor messages with {len(pulse_times)} pulses...")
+
         # Sync timestamps
-        print("Syncing head sensor message IDs to pulse timestamps...")
         synced_timestamps = [pulse_dict.get(msg_id, None) for msg_id in message_ids]
 
         return {
@@ -156,8 +158,10 @@ class Analysis_manager_openfield:
         # Build pulse dictionary
         pulse_dict = {i: pulse_time for i, pulse_time in enumerate(pulse_times)}
 
+        # Print the number of camera frames being synced
+        print(f"Syncing {len(frame_ids)} camera frames with {len(pulse_times)} pulses...")
+
         # Sync timestamps
-        print("Syncing camera frame IDs to pulse timestamps...")
         synced_timestamps = [pulse_dict.get(frame_id, None) for frame_id in frame_ids]
 
         return {

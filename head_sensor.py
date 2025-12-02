@@ -23,7 +23,7 @@ from head_sensor_calibration_ctrl import calibrate
 baud_rate = 57600
 timeout = 2
 
-exit_key = 'esc'
+exit_key = 'del'
 
 # Boundary bytes
 START_BOUNDARY = b'\x02'
@@ -110,13 +110,13 @@ def zero_values(timeout=1):
     return final_values
 
 async def check_stim_signal(file_path, stop_event):
-    def esc_key_monitor():
-        keyboard.wait('esc')
+    def exit_key_monitor():
+        keyboard.wait(exit_key)
         if not stop_event.is_set():
             stop_event.set()
 
     # Start a separate thread to monitor for the ESC key press
-    esc_thread = threading.Thread(target=esc_key_monitor, daemon=True)
+    esc_thread = threading.Thread(target=exit_key_monitor, daemon=True)
     esc_thread.start()
 
     try:

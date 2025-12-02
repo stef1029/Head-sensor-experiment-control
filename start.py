@@ -1,120 +1,162 @@
 from datetime import datetime
+import subprocess
+import sys
+import json
+import os
 
 from utils.experiment_control_class import ExperimentControl
 
 if __name__ == "__main__":
     config_path = r"C:\dev\projects\head_sensor_config.json"
+    
+    # Load the configuration file to get the calibration script path
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+        calibration_script_path = config.get('CALIBRATION_SCRIPT', '')
+    subprocess.run([sys.executable, calibration_script_path, "--info"], check=True)
 
     """
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
-    # mouse_id = "mtap16-2a" # left fiber 88%, right 89% - 1.72mW, 5.1, 8.6, 17.21
-    # fiber_TE = 88
-    # fiber_TE = 89
-
-    # mouse_id = "mtap16-2b" # left fiber 86%, right 87% 
-    # fiber_TE = 86
-    # fiber_TE = 87
-
-    # mouse_id = "mtaq15-1b" # fiber TE=96%
-    # fiber_TE = 96
-
-    # mouse_id = "mtaq15-1a" # fiber TE=94%
-    # fiber_TE = 94
-
-    # mouse_id = "mtaq11-2b" # fiber TE=88%
-    # fiber_TE = 88
-
-    # mouse_id = "mtaq15-1e" # fiber TE=95%
-    # fiber_TE = 95
-
-    # mouse_id = "mtaq15-1d" # fiber TE=94%
-    # fiber_TE = 94
-
-    # mouse_id = "mtaq16-1f" # fiber TE=97%
-    # fiber_TE = 97
-
-    # mouse_id = "mtaq16-1b" # fiber TE=90%
-    # fiber_TE = 90
-
-    # mouse_id = "mtaq14-1a" # fiber TE=88%
-    # fiber_TE = 88
-
-    # mouse_id = "mtaq14-1b" # fiber TE=91%
-    # fiber_TE = 91
-
-    # mouse_id = "mtaq14-1c" # fiber TE=70%
-    # fiber_TE = 70
-
-    # mouse_id = "mtaq16-1c" # fiber TE=28%
-    # fiber_TE = 28
-
-    # mouse_id = "mtaq14-1k" # fiber TE=94%
-    # fiber_TE = 94
-
-    # mouse_id = "mtaq16-1d" # fiber TE=58%
-    # fiber_TE = 58
-
-    # mouse_id = "mtbz8-2f" # fiber TE=80%
+    # mouse_id = "mtaq11-3a"
     # fiber_TE = 80
 
-    # mouse_id = "mtaq15-2f" # fiber TE=93%     
-    # fiber_TE = 93
+    # mouse_id = "wtjp247-3a"
+    # fiber_TE = 82 # left
+    # fiber_TE = 83 # right
 
-    # mouse_id = "mtaq15-3b" # fiber TE=95%
-    # fiber_TE = 95
+    # mouse_id = "wtjp247-3b"
+    # fiber_TE = 85 # left
+    # fiber_TE = 86 # right
 
-    #mouse_id = "mtaq15-3b" # fiber TE=93%
-    #fiber_TE = 93
+    # mouse_id = "wtjp247-3c"
+    # fiber_TE = 85 # left
+    # fiber_TE = 84 # right
 
-    #mouse_id = "mtaq20-1a" # fiber TE=97%
-    #fiber_TE = 97
-    
-    #mouse_id = "mtaq20-1b" # fiber TE=91%
-    #fiber_TE = 91
+    # mouse_id = "mtaq16-2a"
+    # fiber_TE = 88 # left
+    # fiber_TE = 89 # right
 
-    # mouse_id = "mtaq15-4a" # fiber TE=89%
-    # fiber_TE = 89
+    # mouse_id = "mtaq16-2b"
+    # fiber_TE = 86 # left
+    # fiber_TE = 87 # right
 
-    # mouse_id = "mtaq15-4b" # fiber TE=86%
-    # fiber_TE = 86
-    
-    # mouse_id = "mtaq20-1e" # fiber TE=93%
-    # fiber_TE = 93
+    # mouse_id = "mtaq16-2c"
+    # fiber_TE = 83 # left
+    # fiber_TE = 87 # right
 
-
-    mouse_id = "test2"
-    fiber_TE = 94
+    # mouse_id = "mtaq16-2d"
+    # fiber_TE = 85 # left
+    # fiber_TE = 86 # right
 
 
-    patch_cord_TE = 67
+    # mouse_id = "mtaq14-1g"
+    # fiber_TE = 82
 
+    # mouse_id = "mtaq13-3a"
+    # fiber_TE = 80
+
+    # mouse_id = "mtaq11-3b"
+    # fiber_TE = 80
+
+    # mouse_id = "mtbz8-3a"
+    # fiber_TE = 80
+
+    # mouse_id = "mtbz8-3b"
+    # fiber_TE = 80
+
+    # mouse_id = "mtaq14-1b"    
+    # fiber_TE = 91
+
+    # mouse_id = "mtaq14-1c"    
+    # fiber_TE = 70
+
+    mouse_id = "mtbz8-3c"    
+    fiber_TE = 85
+
+    # mouse_id = "test2"
+    # fiber_TE = 94
+
+
+    # patch_cord_TE = 59 # lynn's value
+    patch_cord_TE = 64 # actual value
+
+    """
+    Chip direction selection (rotation angle):
+    0 = chip left,
+    90 = chip backward, 
+    180 = chip right,
+    270 = chip forward
+    """
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
-    # at_brain_power_levels = [5, 10, 15, 20, 30]      
+    # output_folder = r"C:\DATA\250515_opto_excite_Pitx2_VM"
+    # at_brain_power_levels = [1, 5, 10, 20, 30]      
+    # stim_times_ms = [100, 250, 500, 1000]    
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # rotation_angle = 90 # chip backward
+    # notes = "mtaq14.1c - VM ctrl, backward chip"
+
+    output_folder = r"C:\DATA\250603_opto_excite_SC_sst"
+    at_brain_power_levels = [1, 3, 5, 10, 20]      
+    stim_times_ms = [100, 250, 500, 1000]    
+    num_cycles = 50
+    stim_delay = 5000
+    pulse_freq = 30
+    pulse_on_time = 10
+    rotation_angle = 180 # chip backward
+    notes = "mtbz8.3c - ChR2 in SC sst vGAT neurons, right chip"
+
+    # output_folder = r"c:\20250405_Pitx2_opto_excite_headsensor"
+    # at_brain_power_levels = [1, 3, 5, 10, 15, 20, 30]      
     # stim_times_ms = [50, 100, 250, 500, 1000, 2000]    
     # num_cycles = 20
     # stim_delay = 5000
     # pulse_freq = 30
     # pulse_on_time = 10
-    # rotation_angle = 90
-    # notes = ""
+    # # rotation_angle = 270 # chip forward
+    # rotation_angle = 90 # chip backward
+    # notes = "mtaq14.1g - MD WT ctrl, backward chip"
+
+    # output_folder = r"c:\DATA\250509_opto_inhibition_SC_sst"
+    # at_brain_power_levels = [0.5, 0.8, 1, 2, 4, 6, 8, 10]      
+    # stim_times_ms = [250, 500]    
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 0
+    # pulse_on_time = 0
+    # rotation_angle = 180 
+    # rotation_angle = 180 # chip right
+    # notes = "Daniel's mouse with IC++ in SC sst vGAT neurons"
+
+    # output_folder = r"C:\DATA\250423_opto_inhibition_SC_bilateral"
+    # at_brain_power_levels = [1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16]      
+    # stim_times_ms = [500, 2000]    
+    # num_cycles = 20
+    # stim_delay = 5000
+    # pulse_freq = 0
+    # pulse_on_time = 10
+    # # rotation_angle = 270 # chip forward
+    # rotation_angle = 90 # chip backward
+    # notes = "right"
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    output_folder = r"D:\20250303_Pitx2_opto_excite_headsensor"
-    at_brain_power_levels = [5]      
-    stim_times_ms = [2000]    
-    num_cycles = 5
-    stim_delay = 3000
-    pulse_freq = 30
-    pulse_on_time = 10
-    rotation_angle = 90
-    notes = ""
+    # output_folder = r"D:\test_output"
+    # at_brain_power_levels = [5]      
+    # stim_times_ms = [2000]    
+    # num_cycles = 5
+    # stim_delay = 3000
+    # pulse_freq = 0
+    # pulse_on_time = 10
+    # rotation_angle = 90
+    # notes = ""
 
     """
     -------------- Advanced setup (do not change): -------------------------------------------------
@@ -126,7 +168,8 @@ if __name__ == "__main__":
     experiment.configure_ports(
         stim_port='COM23',
         head_port='COM24',
-        daq_port='COM19'
+        daq_port='COM19',
+        laser_port='COM26'
     )
 
     # Turn items in experiment on/off

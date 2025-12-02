@@ -312,7 +312,7 @@ class ExperimentControl:
         )
         
         self.cleanup_processes()
-        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Experiment finished running.")
+        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Experiment finished running.\a")
 
 
 if __name__ == "__main__":
