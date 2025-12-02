@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "T1"
+    mouse_id = "T4"
     fiber_TE = 92
 
     # patch_cord_TE = 30 # 2025-09-24
