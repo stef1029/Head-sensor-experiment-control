@@ -118,7 +118,7 @@ class Cohort_folder:
 
     def check_raw_data(self):
         """
-        For each session, check if the required raw data files exist (e.g. ArduinoDAQ.h5, HeadSensor.h5).
+        For each session, check if raw data files exist (both required and optional).
         Store the results in the session's dictionary.
         """
         print("Checking raw data for each session...")
@@ -128,36 +128,52 @@ class Cohort_folder:
 
                 # Prepare a raw_data dictionary
                 raw_data = {}
+                
+                # Define files with their requirement status
+                # Format: "key": (filename_pattern, is_required)
                 if self.body_sensor:
-                    required_files = {
-                        "arduino_daq_h5": "ArduinoDAQ.h5",
-                        "head_sensor_h5": "Head_sensor.h5",
-                        "body_sensor_h5": "Body_sensor.h5",
-                        "metadata_json": "metadata.json"
+                    files_to_check = {
+                        "arduino_daq_h5": ("ArduinoDAQ.h5", True),
+                        "head_sensor_h5": ("Head_sensor.h5", True),
+                        "body_sensor_h5": ("Body_sensor.h5", True),
+                        "metadata_json": ("metadata.json", True),
+                        # Add optional files here
+                        "video": ("output.avi", False),
+                        "metadata": ("metadata.json", False),
                     }
                 else:
-                    required_files = {
-                        "arduino_daq_h5": "ArduinoDAQ.h5",
-                        "head_sensor_h5": "Head_sensor.h5",
-                        "metadata_json": "metadata.json"
+                    files_to_check = {
+                        "arduino_daq_h5": ("ArduinoDAQ.h5", True),
+                        "head_sensor_h5": ("Head_sensor.h5", True),
+                        "metadata_json": ("metadata.json", True),
+                        # Add optional files here
+                        "video": ("output.avi", False),
+                        "metadata": ("metadata.json", False),
                     }
 
-                missing_files = []
-                all_files_ok = True
+                missing_required_files = []
+                missing_optional_files = []
+                all_required_files_ok = True
 
-                # Check for each required file
-                for key, pattern in required_files.items():
+                # Check for each file
+                for key, (pattern, is_required) in files_to_check.items():
                     found_file = self.find_file(session_path, pattern)
+                    
                     if found_file is None:
-                        all_files_ok = False
-                        missing_files.append(pattern)
                         raw_data[key] = "None"
+                        # Track missing files separately based on requirement status
+                        if is_required:
+                            all_required_files_ok = False
+                            missing_required_files.append(pattern)
+                        else:
+                            missing_optional_files.append(pattern)
                     else:
                         raw_data[key] = str(found_file)
 
-                # Mark presence
-                raw_data["is_all_raw_data_present?"] = all_files_ok
-                raw_data["missing_files"] = missing_files
+                # Mark presence of required files (ignoring optional ones)
+                raw_data["is_all_raw_data_present?"] = all_required_files_ok
+                raw_data["missing_required_files"] = missing_required_files
+                raw_data["missing_optional_files"] = missing_optional_files
 
                 # Attach to the session
                 session_dict["raw_data"] = raw_data

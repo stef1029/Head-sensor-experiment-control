@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "test"
+    mouse_id = "T1"
     fiber_TE = 92
 
     # patch_cord_TE = 30 # 2025-09-24
@@ -175,11 +175,11 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    output_folder = r"D:\test_output"
+    output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
     at_brain_power_levels = [5]      
-    stim_times_ms = [2000]    
-    num_cycles = 5
-    stim_delay = 3000
+    stim_times_ms = [1]    
+    num_cycles = 1
+    stim_delay = 3600000
     pulse_freq = 0
     pulse_on_time = 10
     head_sensor_rotation_angle = 90

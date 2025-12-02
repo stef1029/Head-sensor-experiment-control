@@ -176,6 +176,7 @@ def timeseries_to_intervals(timestamps, signal, HIGH=1, filter_short=False, min_
     return intervals, interval_timestamps
 
 def headtracker_to_nwb(
+    session_dict,
     session_directory,
     output_directory=None,
     session_metadata=None,

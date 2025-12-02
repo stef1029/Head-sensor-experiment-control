@@ -36,11 +36,11 @@ class Analysis_manager_openfield:
         try:
             # Sync head sensor, camera frame, and laser data
             self.sync_data = self.sync_all_data()
-            self.save_synced_data(self.sync_data)
+            session_dict = self.save_synced_data(self.sync_data, session_dict)
             
             # Create NWB file if requested
             if create_nwb:
-                self.create_nwb_file()
+                self.create_nwb_file(session_dict)
                 
         except Exception as e:
             print(f"Error processing data for {self.session_dir}: {e}")
@@ -227,7 +227,7 @@ class Analysis_manager_openfield:
 
         return synced_data
 
-    def save_synced_data(self, synced_data):
+    def save_synced_data(self, synced_data, session_dict):
         """
         Save the synced data to JSON.
         """
@@ -239,26 +239,33 @@ class Analysis_manager_openfield:
             print(f"Synced data saved to {output_path}")
         except Exception as e:
             print(f"Failed to save synced data: {e}")
+        
+        session_dict['synced_data_json'] = str(output_path)
+        return session_dict
             
-    def create_nwb_file(self):
+    def create_nwb_file(self, session_dict):
         """
         Create an NWB file from the synchronized data.
         """
         print(f"Creating NWB file for session {self.session_id}...")
         
         # Check if synced data JSON exists
-        synced_data_file = self.session_dir / f"{self.session_id}_synced_data.json"
+        synced_data_file = Path(session_dict.get('synced_data_json', None))
         if not synced_data_file.exists():
             print(f"Synced data file not found: {synced_data_file}")
             return None
             
         # Find video file (if any)
-        video_files = list(self.session_dir.glob("*.avi"))
-        video_filename = video_files[0].name if video_files else None
+        video_file = session_dict.get('raw_data', {}).get('video', None)
+        if video_file is None:
+            video_filename = None
+        else:
+            video_filename = Path(video_file).name
         
         try:
             # Call the NWB conversion function
             nwb_path = headtracker_to_nwb(
+                session_dict=session_dict,
                 session_directory=self.session_dir,
                 video_filename=video_filename
             )
