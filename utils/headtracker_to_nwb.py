@@ -183,7 +183,6 @@ def headtracker_to_nwb(
     lab="",
     subject_species="Mouse",
     session_description="Head tracking experiment with laser pulses",
-    video_filename=None
 ):
     """
     Convert head sensor data and Arduino DAQ data to NWB format,
@@ -217,11 +216,11 @@ def headtracker_to_nwb(
     body_sensor = session_dict.get("body_sensor", False)
     
     # Look for required files
-    synced_data_file = session_dict.get("raw_data", {}).get("synced_data_json", None)
+    synced_data_file = session_dict.get("synced_data_json", None)
     head_sensor_h5_file = session_dict.get("raw_data", {}).get("head_sensor_h5", None)
     body_sensor_h5_file = session_dict.get("raw_data", {}).get("body_sensor_h5", None)
     arduino_daq_h5_file = session_dict.get("raw_data", {}).get("arduino_daq_h5", None)
-    session_metadata_path = session_dict.get("metadata", None)
+    session_metadata_path = session_dict.get("raw_data", {}).get("metadata", None)
     session_video = session_dict.get("raw_data", {}).get("video", None)
     
     # Check if we have all necessary files
@@ -362,6 +361,7 @@ def headtracker_to_nwb(
     else:
         print("Warning: No head sensor data found in synced_data.json")
 
+    print("Head sensor data added to NWB file")
     # --------------------------------------------------------------------------
     # If present, load body sensor data and add with synced timestamps
     # --------------------------------------------------------------------------
@@ -384,9 +384,9 @@ def headtracker_to_nwb(
                 synced_yaw = np.array([yaw_data[i] for i in valid_indices])
                 synced_roll = np.array([roll_data[i] for i in valid_indices])
                 synced_pitch = np.array([pitch_data[i] for i in valid_indices])
-                synced_timestamps = np.array([head_synced_timestamps[i] for i in valid_indices])
+                synced_timestamps = np.array([body_synced_timestamps[i] for i in valid_indices])
 
-                print(f"Syncing {len(message_ids)} head sensor messages with {len(synced_timestamps)} pulses...")
+                print(f"Syncing {len(message_ids)} body sensor messages with {len(synced_timestamps)} pulses...")
                 
                 # Create a behavioral module for body tracking data
                 behavior_module = nwbfile.create_processing_module(
@@ -520,22 +520,21 @@ def headtracker_to_nwb(
         # Find valid timestamps (not None/null)
         valid_indices = [i for i, val in enumerate(camera_synced_timestamps) if val is not None]
         
-        if valid_indices and video_filename:            
-            if session_video:
-                # Get valid timestamps
-                valid_timestamps = [camera_synced_timestamps[i] for i in valid_indices]
-                
-                # Create ImageSeries for video
-                video_series = ImageSeries(
-                    name='behavior_video',
-                    description='Behavior tracking video',
-                    external_file=[f'./{session_video}'],
-                    format='external',
-                    starting_frame=[0],
-                    timestamps=valid_timestamps,
-                    unit='n.a.'
-                )
-                nwbfile.add_acquisition(video_series)
+        if valid_indices and session_video:            
+            # Get valid timestamps
+            valid_timestamps = [camera_synced_timestamps[i] for i in valid_indices]
+            
+            # Create ImageSeries for video
+            video_series = ImageSeries(
+                name='behavior_video',
+                description='Behavior tracking video',
+                external_file=[f'./{session_video}'],
+                format='external',
+                starting_frame=[0],
+                timestamps=valid_timestamps,
+                unit='n.a.'
+            )
+            nwbfile.add_acquisition(video_series)
     
     # Create output filename from session ID
     output_filename = f"{session_id}_headtracker.nwb"

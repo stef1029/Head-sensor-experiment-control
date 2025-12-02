@@ -175,11 +175,22 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
+    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
+    # at_brain_power_levels = [5]      
+    # stim_times_ms = [1]    
+    # num_cycles = 1
+    # stim_delay = 3600000
+    # pulse_freq = 0
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 0
+    # notes = ""
+
+    output_folder = r"D:\test_output"
     at_brain_power_levels = [5]      
-    stim_times_ms = [1]    
-    num_cycles = 1
-    stim_delay = 3600000
+    stim_times_ms = [500]    
+    num_cycles = 3
+    stim_delay = 1000
     pulse_freq = 0
     pulse_on_time = 10
     head_sensor_rotation_angle = 90
@@ -222,7 +233,7 @@ if __name__ == "__main__":
         "IN3V3_5",
         "HEADSENSOR_SYNC",
         "LASER_SYNC",
-        "IN5V_8",
+        "BODYSENSOR_SYNC",
         "IN5V_9"
     ]
 

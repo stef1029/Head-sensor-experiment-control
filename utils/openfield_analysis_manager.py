@@ -115,11 +115,11 @@ class Analysis_manager_openfield:
             "durations": durations,
         }
 
-    def sync_head_sensor_data(self, pulse_times):
+    def sync_sensor_data(self, sensor_data_file, pulse_times, sensor_location):
         """
-        Sync head sensor data with DAQ pulse times.
+        Sync sensor data with DAQ pulse times.
         """
-        with h5py.File(self.head_sensor_h5, 'r') as sensor_h5:
+        with h5py.File(sensor_data_file, 'r') as sensor_h5:
             message_ids = np.array(sensor_h5['message_ids'])
             yaw_data = np.array(sensor_h5['yaw_data'])
             roll_data = np.array(sensor_h5['roll_data'])
@@ -130,7 +130,7 @@ class Analysis_manager_openfield:
         pulse_dict = {i: pulse_time for i, pulse_time in enumerate(pulse_times)}
 
         # Print the number of head sensor messages being synced
-        print(f"Syncing {len(message_ids)} head sensor messages with {len(pulse_times)} pulses...")
+        print(f"Syncing {len(message_ids)} {sensor_location} sensor messages with {len(pulse_times)} pulses...")
 
         # Sync timestamps
         synced_timestamps = [pulse_dict.get(msg_id, None) for msg_id in message_ids]
@@ -140,7 +140,7 @@ class Analysis_manager_openfield:
             "yaw_data": yaw_data.tolist(),
             "roll_data": roll_data.tolist(),
             "pitch_data": pitch_data.tolist(),
-            "head_sensor_timestamps": sensor_ts.tolist(),
+            f"{sensor_location}_sensor_timestamps": sensor_ts.tolist(),
             "synced_timestamps": synced_timestamps,
         }
 
@@ -186,9 +186,9 @@ class Analysis_manager_openfield:
         laser_events = self.get_laser_events('LASER_SYNC')
 
         # Sync head sensor data
-        head_sensor_data = self.sync_head_sensor_data(head_sensor_pulses)
+        head_sensor_data = self.sync_sensor_data(self.head_sensor_h5, head_sensor_pulses, sensor_location='head')
         if self.body_sensor:
-            body_sensor_data = self.sync_head_sensor_data(body_sensor_pulses)
+            body_sensor_data = self.sync_sensor_data(self.body_sensor_h5, body_sensor_pulses, sensor_location='body')
         
         # Sync camera frame data
         camera_data = self.sync_camera_data(camera_pulses)
@@ -254,21 +254,10 @@ class Analysis_manager_openfield:
         if not synced_data_file.exists():
             print(f"Synced data file not found: {synced_data_file}")
             return None
-            
-        # Find video file (if any)
-        video_file = session_dict.get('raw_data', {}).get('video', None)
-        if video_file is None:
-            video_filename = None
-        else:
-            video_filename = Path(video_file).name
         
         try:
             # Call the NWB conversion function
-            nwb_path = headtracker_to_nwb(
-                session_dict=session_dict,
-                session_directory=self.session_dir,
-                video_filename=video_filename
-            )
+            nwb_path = headtracker_to_nwb(session_dict)
             
             if nwb_path:
                 print(f"Successfully created NWB file: {nwb_path}")
