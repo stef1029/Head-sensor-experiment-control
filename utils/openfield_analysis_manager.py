@@ -21,11 +21,14 @@ class Analysis_manager_openfield:
         # Basic attributes
         self.session_id = session_dict.get("session_id")
         self.session_dir = Path(session_dict.get("directory", ""))
+        self.body_sensor = session_dict.get("body_sensor", False)
 
         # Retrieve file paths from "raw_data" dict
         raw_data = session_dict.get("raw_data", {})
         self.arduino_daq_h5 = Path(raw_data.get("arduino_daq_h5", ""))
         self.head_sensor_h5 = Path(raw_data.get("head_sensor_h5", ""))
+        if self.body_sensor:
+            self.body_sensor_h5 = Path(raw_data.get("body_sensor_h5", ""))
         
         # Add path for tracker data JSON
         self.tracker_json = self.session_dir / f"{self.session_id}_Tracker_data.json"
@@ -34,11 +37,11 @@ class Analysis_manager_openfield:
         try:
             # Sync head sensor, camera frame, and laser data
             self.sync_data = self.sync_all_data()
-            self.save_synced_data(self.sync_data)
+            session_dict = self.save_synced_data(self.sync_data, session_dict)
             
             # Create NWB file if requested
             if create_nwb:
-                self.create_nwb_file()
+                self.create_nwb_file(session_dict)
                 
         except Exception as e:
             print(f"Error processing data for {self.session_dir}: {e}")
@@ -113,11 +116,11 @@ class Analysis_manager_openfield:
             "durations": durations,
         }
 
-    def sync_head_sensor_data(self, pulse_times):
+    def sync_sensor_data(self, sensor_data_file, pulse_times, sensor_location):
         """
-        Sync head sensor data with DAQ pulse times.
+        Sync sensor data with DAQ pulse times.
         """
-        with h5py.File(self.head_sensor_h5, 'r') as sensor_h5:
+        with h5py.File(sensor_data_file, 'r') as sensor_h5:
             message_ids = np.array(sensor_h5['message_ids'])
             yaw_data = np.array(sensor_h5['yaw_data'])
             roll_data = np.array(sensor_h5['roll_data'])
@@ -128,7 +131,7 @@ class Analysis_manager_openfield:
         pulse_dict = {i: pulse_time for i, pulse_time in enumerate(pulse_times)}
 
         # Print the number of head sensor messages being synced
-        print(f"Syncing {len(message_ids)} head sensor messages with {len(pulse_times)} pulses...")
+        print(f"Syncing {len(message_ids)} {sensor_location} sensor messages with {len(pulse_times)} pulses...")
 
         # Sync timestamps
         synced_timestamps = [pulse_dict.get(msg_id, None) for msg_id in message_ids]
@@ -138,7 +141,7 @@ class Analysis_manager_openfield:
             "yaw_data": yaw_data.tolist(),
             "roll_data": roll_data.tolist(),
             "pitch_data": pitch_data.tolist(),
-            "head_sensor_timestamps": sensor_ts.tolist(),
+            f"{sensor_location}_sensor_timestamps": sensor_ts.tolist(),
             "synced_timestamps": synced_timestamps,
         }
 
@@ -175,34 +178,57 @@ class Analysis_manager_openfield:
         """
         # Get pulse times for head sensor and camera channels
         head_sensor_pulses, _ = self.get_sync_pulses('HEADSENSOR_SYNC')
+        if self.body_sensor:
+            body_sensor_pulses, _ = self.get_sync_pulses('BODYSENSOR_SYNC')
+
         camera_pulses, _ = self.get_sync_pulses('CAMERA_SYNC')
         
         # Get laser events (rising and falling edges)
         laser_events = self.get_laser_events('LASER_SYNC')
 
         # Sync head sensor data
-        head_sensor_data = self.sync_head_sensor_data(head_sensor_pulses)
+        head_sensor_data = self.sync_sensor_data(self.head_sensor_h5, head_sensor_pulses, sensor_location='head')
+        if self.body_sensor:
+            body_sensor_data = self.sync_sensor_data(self.body_sensor_h5, body_sensor_pulses, sensor_location='body')
         
         # Sync camera frame data
         camera_data = self.sync_camera_data(camera_pulses)
 
         # Combine all synced data
-        synced_data = {
-            "session_id": self.session_id,
-            "head_sensor": {
-                "pulse_times": head_sensor_pulses.tolist(),
-                **head_sensor_data
-            },
-            "camera": {
-                "pulse_times": camera_pulses.tolist(),
-                **camera_data
-            } if camera_data is not None else None,
-            "laser": laser_events
-        }
+        if self.body_sensor:
+            synced_data = {
+                "session_id": self.session_id,
+                "head_sensor": {
+                    "pulse_times": head_sensor_pulses.tolist(),
+                    **head_sensor_data
+                },
+                "body_sensor": {
+                    "pulse_times": body_sensor_pulses.tolist(),
+                    **body_sensor_data
+                },
+                "camera": {
+                    "pulse_times": camera_pulses.tolist(),
+                    **camera_data
+                } if camera_data is not None else None,
+                "laser": laser_events
+            }
+        else:
+            synced_data = {
+                "session_id": self.session_id,
+                "head_sensor": {
+                    "pulse_times": head_sensor_pulses.tolist(),
+                    **head_sensor_data
+                },
+                "camera": {
+                    "pulse_times": camera_pulses.tolist(),
+                    **camera_data
+                } if camera_data is not None else None,
+                "laser": laser_events
+            }
 
         return synced_data
 
-    def save_synced_data(self, synced_data):
+    def save_synced_data(self, synced_data, session_dict):
         """
         Save the synced data to JSON.
         """
@@ -214,29 +240,25 @@ class Analysis_manager_openfield:
             print(f"Synced data saved to {output_path}")
         except Exception as e:
             print(f"Failed to save synced data: {e}")
+        
+        session_dict['synced_data_json'] = str(output_path)
+        return session_dict
             
-    def create_nwb_file(self):
+    def create_nwb_file(self, session_dict):
         """
         Create an NWB file from the synchronized data.
         """
         print(f"Creating NWB file for session {self.session_id}...")
         
         # Check if synced data JSON exists
-        synced_data_file = self.session_dir / f"{self.session_id}_synced_data.json"
+        synced_data_file = Path(session_dict.get('synced_data_json', None))
         if not synced_data_file.exists():
             print(f"Synced data file not found: {synced_data_file}")
             return None
-            
-        # Find video file (if any)
-        video_files = list(self.session_dir.glob("*.avi"))
-        video_filename = video_files[0].name if video_files else None
         
         try:
             # Call the NWB conversion function
-            nwb_path = headtracker_to_nwb(
-                session_directory=self.session_dir,
-                video_filename=video_filename
-            )
+            nwb_path = headtracker_to_nwb(session_dict)
             
             if nwb_path:
                 print(f"Successfully created NWB file: {nwb_path}")

@@ -222,7 +222,7 @@ def display_calibration_info():
     """Display calibration information with colorful formatting"""
     init()  # Initialize colorama
     
-    last_calibrated = "29th April 2025 SRC"
+    last_calibrated = "23rd Sept 2025 DW"
     
     print("\n" + "="*60)
     print(Fore.CYAN + Style.BRIGHT + "SENSOR CALIBRATION INFORMATION" + Style.RESET_ALL)
@@ -232,7 +232,7 @@ def display_calibration_info():
     print(Fore.WHITE + "To calibrate, use head_sensor_calibration_ctrl.py.\nCalibrate after any major room changes." + Style.RESET_ALL)
     print("="*60 + "\n")
 
-last_calibrated = "29th April 2025 SRC"
+last_calibrated = "23rd Sept 2025 DW"
 
 """
 ==========================================================================================
@@ -244,7 +244,6 @@ if __name__ == "__main__":
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(description="IMU Sensor Calibration Tool")
     parser.add_argument("-i", "--info", action="store_true", help="Display calibration information")
-    parser.add_argument("-p", "--port", default="COM24", help="Serial port to use (default: COM24)")
     args = parser.parse_args()
     
     # Initialize colorama
@@ -254,5 +253,5 @@ if __name__ == "__main__":
         display_calibration_info()
     else:
         # Run the normal calibration process
-        calibrate(args.port)
+        calibrate("COM6")  # Adjust COM port as needed
 
