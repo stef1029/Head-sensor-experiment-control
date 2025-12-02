@@ -6,7 +6,8 @@ from pathlib import Path
 import os
 
 # Import the NWB conversion utility
-from utils.headtracker_to_nwb import headtracker_to_nwb
+from headtracker_to_nwb import headtracker_to_nwb
+from cohort_folder_openfield import Cohort_folder
 
 class Analysis_manager_openfield:
     def __init__(self, session_dict, create_nwb=True):
@@ -244,3 +245,63 @@ class Analysis_manager_openfield:
             print(f"Error creating NWB file: {e}")
             traceback.print_exc()
             return None
+        
+def main(cohort_folders=None, refresh=False):
+    """
+    Process multiple cohort folders and run analysis on each unprocessed session.
+    
+    Args:
+        cohort_folders (list): List of paths to cohort folders. If None, uses default locations.
+        refresh (bool): If True, reprocess sessions even if they've already been processed.
+    """
+    if cohort_folders is None:
+        # Default cohort folders if none provided
+        cohort_folders = [
+            Path(r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\SC"),
+            Path(r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\MD"),
+            Path(r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\PF"),
+            Path(r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\Pons"),
+            Path(r"W:\2025_04_07_Lynn_final_headsensor\final_sessions\Medulla")
+        ]
+    
+    for folder_path in cohort_folders:
+        print(f"\n{'='*80}")
+        print(f"Processing cohort folder: {folder_path}")
+        print(f"{'='*80}")
+        
+        try:
+            # Initialize cohort folder
+            cohort = Cohort_folder(folder_path)
+            
+            # Find sessions that need processing
+            sessions_to_process = []
+            for mouse_id, mouse_data in cohort.cohort["mice"].items():
+                for session_id, session_dict in mouse_data["sessions"].items():
+                    raw_data_present = session_dict["raw_data"].get("is_all_raw_data_present?", False)
+                    processed_data_present = session_dict["processed_data"].get("processed_data_present?", False)
+                    
+                    if raw_data_present and (not processed_data_present or refresh):
+                        sessions_to_process.append(session_dict)
+                        print(f"Queued for processing: {session_id} (Mouse: {mouse_id})")
+            
+            # Process each session
+            print(f"\nFound {len(sessions_to_process)} sessions to process in {folder_path}")
+            for i, session_dict in enumerate(sessions_to_process):
+                print(f"\n[{i+1}/{len(sessions_to_process)}] Processing session: {session_dict['session_id']}")
+                try:
+                    # Run analysis on this session
+                    analyzer = Analysis_manager_openfield(session_dict, create_nwb=True)
+                    print(f"Completed processing for {session_dict['session_id']}")
+                except Exception as e:
+                    print(f"Error processing session {session_dict['session_id']}: {e}")
+                    traceback.print_exc()
+        
+        except Exception as e:
+            print(f"Error processing cohort folder {folder_path}: {e}")
+            traceback.print_exc()
+    
+    print("\nAll cohort folders have been processed.")
+
+if __name__ == "__main__":
+    # Example usage: process all cohort folders
+    main(refresh=True)
