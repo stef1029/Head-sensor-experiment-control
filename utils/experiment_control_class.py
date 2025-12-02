@@ -339,8 +339,10 @@ class ExperimentControl:
 
         if self.run_head_sensor:
             self.head_sensor_process.wait()  # wait for head sensor to finish (either via stim board signal or exit_key)
-            self.body_sensor_process.wait()  # wait for body sensor to finish (either via stim board signal or exit_key)
             self.stop_camera("openfield")   # create signal file to stop camera recording
+        if self.run_body_sensor:
+            self.body_sensor_process.wait()  # wait for body sensor to finish (either via stim board signal or exit_key)
+            
         if self.run_camera:
             self.camera_process.wait()  # wait until the camera process finishes (either via head sensor signal or exit_key)
         

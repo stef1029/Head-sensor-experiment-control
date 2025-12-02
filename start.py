@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
     # Turn items in experiment on/off
     run_head_sensor = True
-    run_body_sensor = True
+    run_body_sensor = False
     run_camera = True
     run_arduino_daq = True
     run_stim_board = True
