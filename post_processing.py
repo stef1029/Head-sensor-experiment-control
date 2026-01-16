@@ -296,14 +296,36 @@ def main():
     # } 
     # cohort_directories.append(cohort_directory)
 
+    # cohort_directory = {
+    #     'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\Saline")} 
+    # cohort_directories.append(cohort_directory)
+
+    # cohort_directory = {
+    #     'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ")} 
+    # cohort_directories.append(cohort_directory)
+
     cohort_directory = {
-        'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\Saline")} 
+        'local': Path(r"D:\head_sensor_exp\pitx2_proj_excite\pons")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ")} 
+        'local': Path(r"D:\head_sensor_exp\pitx2_proj_excite\md")} 
     cohort_directories.append(cohort_directory)
 
+    cohort_directory = {
+        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\md")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\pons")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm")} 
+    cohort_directories.append(cohort_directory)
+
+    
+ 
     # cohort_directory = {
     #     'local': Path(r"D:\test_output")} 
     # cohort_directories.append(cohort_directory)

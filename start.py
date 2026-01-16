@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "T4"
+    mouse_id = "mtaq21.1c"
     fiber_TE = 92
 
     # patch_cord_TE = 30 # 2025-09-24
@@ -30,7 +30,8 @@ if __name__ == "__main__":
     # patch_cord_TE = 34 # cord 1 on array
     # patch_cord_TE = 35 # cord 9 on array
     # patch_cord_TE = 40 # cord 6 on array
-    patch_cord_TE = 20 # 2025-10-31
+    # patch_cord_TE = 20 # 2025-10-31
+    patch_cord_TE = 59 # 2026-01-06
 
 
 
@@ -48,13 +49,22 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"C:\DATA\251031_opto_Pitx2_excite_medulla"
-    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10, 15]   
-    # # stim_times_ms = [250] 
-    # at_brain_power_levels = [10]   
-    # stim_times_ms = [1000]       
-    # num_cycles = 70
-    # stim_delay = 5000
+    # output_folder = r"d:\head_sensor_exp\pitx2_proj_excite\md"
+    # at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]   
+    # stim_times_ms = [250]        
+    # num_cycles = 100
+    # stim_delay = 10000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # # rotation_angle = 90 # chip backward
+    # notes = "test"
+
+    # output_folder = r"d:\head_sensor_exp\pitx2_proj_excite\pons"
+    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10]   
+    # # stim_times_ms = [250]        
+    # num_cycles = 100
+    # stim_delay = 10000
     # pulse_freq = 30 
     # pulse_on_time = 10
     # rotation_angle = 270 # chip forward
@@ -174,7 +184,52 @@ if __name__ == "__main__":
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
-    """
+    # """
+
+    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\md"
+    # at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]       
+    # stim_times_ms = [250]    
+    # num_cycles = 70
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 90
+    # notes = "6x Pitx2::ChR2 fiber excitation in md"
+
+    output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm"
+    at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]       
+    stim_times_ms = [250]    
+    num_cycles = 70
+    stim_delay = 10000
+    pulse_freq = 30
+    pulse_on_time = 10
+    head_sensor_rotation_angle = 90
+    body_sensor_rotation_angle = 90
+    notes = "3x Pitx2::ChR2 fiber excitation in vm"
+
+    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\pons"
+    # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10]       
+    # stim_times_ms = [250]    
+    # num_cycles = 70
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 90
+    # notes = "3x Pitx2::ChR2 fiber excitation in vm"
+
+    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm"
+    # at_brain_power_levels = [10]       
+    # stim_times_ms = [250]    
+    # num_cycles = 10
+    # stim_delay = 2000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 90
+    # notes = "3x Pitx2::ChR2 fiber excitation in vm"
+
     # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
     # at_brain_power_levels = [5]      
     # stim_times_ms = [1]    
@@ -186,16 +241,27 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 0
     # notes = ""
 
-    output_folder = r"D:\test_output"
-    at_brain_power_levels = [5]      
-    stim_times_ms = [500]    
-    num_cycles = 3
-    stim_delay = 1000
-    pulse_freq = 0
-    pulse_on_time = 10
-    head_sensor_rotation_angle = 90
-    body_sensor_rotation_angle = 0
-    notes = ""
+    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
+    # at_brain_power_levels = [5]      
+    # stim_times_ms = [1]    
+    # num_cycles = 1
+    # stim_delay = 180000
+    # pulse_freq = 0
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 0
+    # notes = ""
+
+    # output_folder = r"D:\test_output"
+    # at_brain_power_levels = [5]      
+    # stim_times_ms = [500]    
+    # num_cycles = 3
+    # stim_delay = 1000
+    # pulse_freq = 0
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90
+    # body_sensor_rotation_angle = 0
+    # notes = ""
 
     """
     -------------- Advanced setup (do not change or things will break): -------------------------------------------------
@@ -220,7 +286,7 @@ if __name__ == "__main__":
 
     # Turn items in experiment on/off
     run_head_sensor = True
-    run_body_sensor = False
+    run_body_sensor = True
     run_camera = True
     run_arduino_daq = True
     run_stim_board = True

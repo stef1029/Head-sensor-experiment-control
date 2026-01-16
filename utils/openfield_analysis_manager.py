@@ -6,8 +6,8 @@ from pathlib import Path
 import os
 
 # Import the NWB conversion utility
-from headtracker_to_nwb import headtracker_to_nwb
-from cohort_folder_openfield import Cohort_folder
+from utils.headtracker_to_nwb import headtracker_to_nwb
+from utils.cohort_folder_openfield import Cohort_folder
 
 class Analysis_manager_openfield:
     def __init__(self, session_dict, create_nwb=True):
