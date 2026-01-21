@@ -7,7 +7,7 @@ import os
 from utils.experiment_control_class import ExperimentControl
 
 if __name__ == "__main__":
-    config_path = r"C:\dev\projects\head_sensor_config.json"
+    config_path = r"C:\Dev\projects\Head-sensor-experiment-control\head_sensor_config.json"
     
     # Load the configuration file to get the calibration script path
     with open(config_path, 'r') as f:
@@ -19,8 +19,8 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "T4"
-    fiber_TE = 92
+    mouse_id = "mtdl3-1h"
+    # fiber_TE = 80
 
     # patch_cord_TE = 30 # 2025-09-24
     # patch_cord_TE = 64 # actual value
@@ -30,8 +30,10 @@ if __name__ == "__main__":
     # patch_cord_TE = 34 # cord 1 on array
     # patch_cord_TE = 35 # cord 9 on array
     # patch_cord_TE = 40 # cord 6 on array
-    patch_cord_TE = 20 # 2025-10-31
+    # patch_cord_TE = 13 # 2025-10-31
 
+    fiber_TE = 100 
+    patch_cord_TE = 100
 
 
 
@@ -186,16 +188,27 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 0
     # notes = ""
 
-    output_folder = r"D:\test_output"
-    at_brain_power_levels = [5]      
-    stim_times_ms = [500]    
-    num_cycles = 3
-    stim_delay = 1000
+    output_folder = r"E:\test_output"
+    at_brain_power_levels = [10]      
+    stim_times_ms = [100]    
+    num_cycles = 10
+    stim_delay = 500
     pulse_freq = 0
     pulse_on_time = 10
     head_sensor_rotation_angle = 90
     body_sensor_rotation_angle = 0
     notes = ""
+
+    # output_folder = r"E:\DATA\dan\head_sensor\catch_array_test\mtdl3-1h"
+    # at_brain_power_levels = [4.5, 9, 10.4]      
+    # stim_times_ms = [250]        
+    # num_cycles = 40
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270 # chip forward
+    # body_sensor_rotation_angle = 90 # chip backward
+    # notes = "Mrs Array test (MTDL), pos = all"
 
     """
     -------------- Advanced setup (do not change or things will break): -------------------------------------------------
@@ -203,13 +216,17 @@ if __name__ == "__main__":
     # Initialize experiment control
     experiment = ExperimentControl(config_path)
 
+    # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
+    # laser_wavelength = '473nm'  # Options: '473nm' or '635nm'
+    laser_wavelength = '635nm'  # Options: '473nm' or '635nm'
+
     # Configure COM ports - ADJUST THESE AS NEEDED
     experiment.configure_ports(
-        stim_port='COM23',
-        head_port='COM24',
-        body_port='COM6',
-        daq_port='COM19',
-        laser_port='COM11'
+        stim_port='COM21',
+        head_port='COM5',
+        body_port='COM19',
+        daq_port='COM16',
+        laser_port='COM20'
     )
 
     # configure camera settings
@@ -266,5 +283,6 @@ if __name__ == "__main__":
         run_stim_board=run_stim_board,
         channel_list=channel_list,
         camera_serial_number=camera_serial_number,
-        camera_fps=camera_fps
+        camera_fps=camera_fps,
+        laser_wavelength=laser_wavelength
     )
