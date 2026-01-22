@@ -189,7 +189,7 @@ if __name__ == "__main__":
     # notes = ""
 
     output_folder = r"E:\test_output"
-    at_brain_power_levels = [10]      
+    at_brain_power_levels = [100]      
     stim_times_ms = [100]    
     num_cycles = 10
     stim_delay = 500
@@ -217,8 +217,11 @@ if __name__ == "__main__":
     experiment = ExperimentControl(config_path)
 
     # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
-    # laser_wavelength = '473nm'  # Options: '473nm' or '635nm'
-    laser_wavelength = '635nm'  # Options: '473nm' or '635nm'
+    # --------> ONLY SELECT ONE <---------
+    laser_wavelength = '473nm'  # Options: '473nm' or '635nm'
+    # laser_wavelength = '635nm'  # Options: '473nm' or '635nm'
+    """ Note: when changing laser wavelength, remember to change/ check patch cord efficiencies above as needed."""
+    #----------------------------------------
 
     # Configure COM ports - ADJUST THESE AS NEEDED
     experiment.configure_ports(
@@ -226,7 +229,8 @@ if __name__ == "__main__":
         head_port='COM5',
         body_port='COM19',
         daq_port='COM16',
-        laser_port='COM20'
+        laser_port_473nm='COM25',  # Blue laser (Cobolt 473nm)
+        laser_port_635nm='COM26'   # Red laser (635nm)
     )
 
     # configure camera settings

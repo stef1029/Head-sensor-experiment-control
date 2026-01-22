@@ -21,7 +21,9 @@ class ExperimentControl:
         self.head_sensor_port = 'COM24'
         self.body_sensor_port = 'COM6'
         self.arduino_daq_port = 'COM2'
-        self.laser_port = 'COM11'
+        self.laser_port_473nm = 'COM20'  # Blue laser (473nm)
+        self.laser_port_635nm = 'COM26'  # Red laser (635nm)
+        self.laser_port = self.laser_port_473nm  # Default to blue laser for backward compatibility
         
         self.baud_rate = 57600
         self.timeout = 2
@@ -50,12 +52,17 @@ class ExperimentControl:
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script
-        laser_script = self.laser_control_473nm if laser_wavelength == '473nm' else self.laser_control_635nm
+        # Select the appropriate laser control script and port
+        if laser_wavelength == '473nm':
+            laser_script = self.laser_control_473nm
+            laser_port = self.laser_port_473nm
+        else:
+            laser_script = self.laser_control_635nm
+            laser_port = self.laser_port_635nm
 
         self.laser_control_process = subprocess.Popen([
             self.python_exe, laser_script,
-            '--laser_port', self.laser_port,
+            '--laser_port', laser_port,
             '--arduino_port', self.stim_board_port,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -67,12 +74,17 @@ class ExperimentControl:
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script
-        laser_script = self.laser_control_473nm if laser_wavelength == '473nm' else self.laser_control_635nm
+        # Select the appropriate laser control script and port
+        if laser_wavelength == '473nm':
+            laser_script = self.laser_control_473nm
+            laser_port = self.laser_port_473nm
+        else:
+            laser_script = self.laser_control_635nm
+            laser_port = self.laser_port_635nm
 
         self.laser_control_process = subprocess.Popen([
             self.python_exe, laser_script,
-            '--laser_port', self.laser_port,
+            '--laser_port', laser_port,
             '--arduino_port', self.stim_board_port,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -242,7 +254,7 @@ class ExperimentControl:
         
         delete_signal_files(self.output_path)
 
-    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None):
+    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None, laser_port_473nm=None, laser_port_635nm=None):
         if stim_port:
             self.stim_board_port = stim_port
         if head_port:
@@ -252,7 +264,11 @@ class ExperimentControl:
         if daq_port:
             self.arduino_daq_port = daq_port
         if laser_port:
-            self.laser_port = laser_port
+            self.laser_port = laser_port  # Backward compatibility
+        if laser_port_473nm:
+            self.laser_port_473nm = laser_port_473nm
+        if laser_port_635nm:
+            self.laser_port_635nm = laser_port_635nm
 
     def run_experiment(
         self,

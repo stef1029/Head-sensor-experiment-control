@@ -100,7 +100,7 @@ class RedLaser:
         data4 = power_value & 0xFF
 
         cmd = [
-            0x53,  # START CODE
+            0x53,  # START CODE for commands TO laser
             0x0A,  # FRAME SIZE
             0x02,  # CHANNEL (LD power set, mW)
             0x01,  # COMMAND (write)
@@ -127,7 +127,7 @@ class RedLaser:
         Protocol: 0x53, 0x0A, 0x00, 0x01 (write), 0x00, 0x00, 0x00, 0x01, CHECKSUM, 0x0D
         """
         cmd = [
-            0x53,  # START CODE
+            0x53,  # START CODE for commands TO laser
             0x0A,  # FRAME SIZE
             0x00,  # CHANNEL (LD switch)
             0x01,  # COMMAND (write)
@@ -153,7 +153,7 @@ class RedLaser:
         Protocol: 0x53, 0x0A, 0x00, 0x01 (write), 0x00, 0x00, 0x00, 0x00, CHECKSUM, 0x0D
         """
         cmd = [
-            0x53,  # START CODE
+            0x53,  # START CODE for commands TO laser
             0x0A,  # FRAME SIZE
             0x00,  # CHANNEL (LD switch)
             0x01,  # COMMAND (write)
@@ -308,10 +308,15 @@ def main():
         laser = RedLaser(port=args.laser_port)
         laser.connect()
 
-        # Turn laser ON for safety (Arduino will gate the output)
+        # Turn laser ON first (required before setting power, Arduino will gate the output)
         print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + "Turning laser ON (Arduino will control gating)...")
         laser.turn_on()
-        time.sleep(1)
+        time.sleep(0.5)
+
+        # Set initial power after turning on
+        print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + f"Setting initial power to {args.powers[0]} mW...")
+        laser.set_power(args.powers[0])
+        time.sleep(0.5)
 
         # Setup Arduino
         print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + "Initializing Arduino...")
