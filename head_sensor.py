@@ -317,12 +317,16 @@ def main():
         time.sleep(2)  # Give some time for the connection to settle
         head_sensor.reset_input_buffer()
 
-        # Send start command to Arduino
-        head_sensor.write(b's')
+        # Send zero command to Arduino (read sensors without sync pulses)
+        head_sensor.write(b'z')
         head_sensor.flush()  # Ensure the command is transmitted
 
         # Zero the initial values
         initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
+        
+        # Send start command to begin actual recording with sync pulses
+        head_sensor.write(b's')
+        head_sensor.flush()  # Ensure the command is transmitted
         if np.isnan(initial_yaw):
             print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
@@ -331,10 +335,14 @@ def main():
             time.sleep(2)  # Give some time for the connection to settle
             head_sensor.reset_input_buffer()
 
-            # Send start command to Arduino
-            head_sensor.write(b's')
+            # Send zero command to Arduino (read sensors without sync pulses)
+            head_sensor.write(b'z')
             head_sensor.flush()  # Ensure the command is transmitted
             initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
+            
+            # Send start command to begin actual recording with sync pulses
+            head_sensor.write(b's')
+            head_sensor.flush()  # Ensure the command is transmitted
 
             if np.isnan(initial_yaw):
                 print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
@@ -344,10 +352,14 @@ def main():
                 time.sleep(2)  # Give some time for the connection to settle
                 head_sensor.reset_input_buffer()
 
-                # Send start command to Arduino
-                head_sensor.write(b's')
+                # Send zero command to Arduino (read sensors without sync pulses)
+                head_sensor.write(b'z')
                 head_sensor.flush()  # Ensure the command is transmitted
                 initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
+                
+                # Send start command to begin actual recording with sync pulses
+                head_sensor.write(b's')
+                head_sensor.flush()  # Ensure the command is transmitted
 
         # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
 

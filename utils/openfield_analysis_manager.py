@@ -10,6 +10,7 @@ from utils.headtracker_to_nwb import headtracker_to_nwb
 from utils.cohort_folder_openfield import Cohort_folder
 
 class Analysis_manager_openfield:
+
     def __init__(self, session_dict, create_nwb=True):
         """
         Initialize the analysis manager and process data.
@@ -46,6 +47,115 @@ class Analysis_manager_openfield:
         except Exception as e:
             print(f"Error processing data for {self.session_dir}: {e}")
             traceback.print_exc()
+    
+    @staticmethod
+    def filter_startup_pulses(pulse_times, channel_name='unknown', startup_window_seconds=120):
+        """
+        Automatically detect and remove spurious startup pulses that occur during 
+        the zeroing phase (before actual recording starts).
+        
+        This method identifies chunks of pulses separated by significant gaps and:
+        1. Only considers startup blips that occur within the first N seconds
+        2. Keeps the longest continuous chunk from that window
+        3. Removes all other shorter chunks within that window
+        4. Preserves all pulses after the window (to avoid filtering legitimate mid-session gaps)
+        
+        Args:
+            pulse_times (np.array): Array of pulse timestamps
+            channel_name (str): Name of channel (for reporting)
+            startup_window_seconds (float): Time window at start of session to check for startup blips (default 120s = 2 min)
+            
+        Returns:
+            np.array: Filtered pulse times with startup blips removed
+        """
+        if len(pulse_times) < 10:
+            # Too few pulses to filter reliably
+            return pulse_times
+        
+        # Calculate inter-pulse gaps
+        gaps = np.diff(pulse_times)
+        median_gap = np.median(gaps)
+        gap_threshold = max(0.1, median_gap * 5)  # 5x median gap or 100ms, whichever is larger
+        
+        # Find all significant gaps that define chunk boundaries
+        significant_gap_indices = np.where(gaps > gap_threshold)[0]
+        
+        if len(significant_gap_indices) == 0:
+            # No significant gaps found - return all pulses
+            print(f"No significant startup burst detected for {channel_name} - keeping all pulses")
+            return pulse_times
+        
+        # Segment pulses into chunks based on significant gaps
+        chunk_boundaries = [0] + (significant_gap_indices + 1).tolist() + [len(pulse_times)]
+        chunks = []
+        
+        for i in range(len(chunk_boundaries) - 1):
+            start_idx = chunk_boundaries[i]
+            end_idx = chunk_boundaries[i + 1]
+            chunk = pulse_times[start_idx:end_idx]
+            chunk_start_time = chunk[0]
+            chunk_end_time = chunk[-1]
+            chunk_size = len(chunk)
+            chunks.append({
+                'start_idx': start_idx,
+                'end_idx': end_idx,
+                'start_time': chunk_start_time,
+                'end_time': chunk_end_time,
+                'size': chunk_size,
+                'data': chunk
+            })
+        
+        # Set startup window relative to first pulse
+        session_start_time = pulse_times[0]
+        startup_window_end_time = session_start_time + startup_window_seconds
+        
+        # Identify chunks that are entirely or mostly within the startup window
+        startup_window_chunks = []
+        post_window_chunks = []
+        
+        for chunk in chunks:
+            if chunk['end_time'] <= startup_window_end_time:
+                # Entire chunk is within startup window
+                startup_window_chunks.append(chunk)
+            elif chunk['start_time'] >= startup_window_end_time:
+                # Entire chunk is after startup window
+                post_window_chunks.append(chunk)
+            else:
+                # Chunk spans the boundary - keep it (it's the main recording)
+                post_window_chunks.append(chunk)
+        
+        # If we have chunks in the startup window, find the longest and remove others
+        if len(startup_window_chunks) > 0:
+            # Find the longest chunk in the startup window
+            longest_startup_chunk = max(startup_window_chunks, key=lambda x: x['size'])
+            
+            # Check if the longest startup chunk is much smaller than post-window chunks
+            # If post-window chunks exist, the longest startup chunk should be small
+            if len(post_window_chunks) > 0:
+                longest_post_chunk = max(post_window_chunks, key=lambda x: x['size'])
+                
+                # Only filter if the longest startup chunk is clearly smaller than post-window
+                if longest_startup_chunk['size'] < longest_post_chunk['size'] * 0.5:
+                    # Keep the post-window chunks (main recording)
+                    filtered_pulses = np.concatenate([chunk['data'] for chunk in post_window_chunks])
+                    removed_count = len(pulse_times) - len(filtered_pulses)
+                    
+                    print(f"Filtered {channel_name}: Removed {removed_count} startup blip pulses "
+                          f"({len(startup_window_chunks)} chunks within first {startup_window_seconds}s)")
+                    print(f"  Kept {len(filtered_pulses)} pulses from main recording")
+                    return filtered_pulses
+            else:
+                # Only chunks in startup window exist - this shouldn't happen for real recordings
+                # Return all pulses as a safety measure
+                print(f"Warning: {channel_name} - All pulses are within startup window. "
+                      f"Keeping all {len(pulse_times)} pulses")
+                return pulse_times
+        
+        # No startup blips detected - return all pulses
+        print(f"No significant startup burst detected for {channel_name} - keeping all pulses")
+        return pulse_times
+
+
 
     def get_sync_pulses(self, channel_name):
         """
@@ -66,7 +176,11 @@ class Analysis_manager_openfield:
         # The pulse occurs at index+1
         pulse_times = daq_timestamps[pulse_indices + 1]
         
-        print(f"Found {len(pulse_times)} pulses in ArduinoDAQ for {channel_name} channel.")
+        print(f"Found {len(pulse_times)} pulses in ArduinoDAQ for {channel_name} channel (before filtering).")
+        
+        # Filter out startup/zeroing pulses
+        pulse_times = self.filter_startup_pulses(pulse_times, channel_name)
+        
         return pulse_times, daq_timestamps
 
     def get_laser_events(self, channel_name='LASER_SYNC'):
@@ -90,6 +204,10 @@ class Analysis_manager_openfield:
         # The edge occurs at index+1
         rising_times = daq_timestamps[rising_indices + 1]
         falling_times = daq_timestamps[falling_indices + 1]
+        
+        # Filter out startup/zeroing pulses
+        rising_times = self.filter_startup_pulses(rising_times, channel_name + '_rising')
+        falling_times = self.filter_startup_pulses(falling_times, channel_name + '_falling')
         
         # Handle case where we have unequal number of rising and falling edges
         min_len = min(len(rising_times), len(falling_times))
