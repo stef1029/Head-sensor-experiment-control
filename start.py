@@ -7,7 +7,7 @@ import os
 from utils.experiment_control_class import ExperimentControl
 
 if __name__ == "__main__":
-    config_path = r"C:\dev\projects\head_sensor_config.json"
+    config_path = r"C:\Dev\projects\Head-sensor-experiment-control\head_sensor_config.json"
     
     # Load the configuration file to get the calibration script path
     with open(config_path, 'r') as f:
@@ -19,8 +19,8 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "mtaq21.1c"
-    fiber_TE = 92
+    mouse_id = "mtaq27-1e"
+    # fiber_TE = 
 
     # patch_cord_TE = 30 # 2025-09-24
     # patch_cord_TE = 64 # actual value
@@ -30,9 +30,10 @@ if __name__ == "__main__":
     # patch_cord_TE = 34 # cord 1 on array
     # patch_cord_TE = 35 # cord 9 on array
     # patch_cord_TE = 40 # cord 6 on array
-    # patch_cord_TE = 20 # 2025-10-31
-    patch_cord_TE = 59 # 2026-01-06
+    # patch_cord_TE = 13 # 2025-10-31
 
+    fiber_TE = 85
+    patch_cord_TE = 70
 
 
 
@@ -184,21 +185,43 @@ if __name__ == "__main__":
 
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
-    # """
+    """
 
-    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\md"
-    # at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]       
+    # output_folder = r"E:\DATA\dan\head_sensor\tests"
+    # at_brain_power_levels = [60]      
     # stim_times_ms = [250]    
-    # num_cycles = 70
+    # num_cycles = 2
     # stim_delay = 10000
     # pulse_freq = 30
     # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
+    # head_sensor_rotation_angle = 90                                                                                                                    
     # body_sensor_rotation_angle = 90
-    # notes = "6x Pitx2::ChR2 fiber excitation in md"
+    # notes = "test of strong Pitx2 terminal stimulation in MD"
+    
+    # output_folder = r"E:\DATA\dan\head_sensor\opsin_optimisation\WiChR"
+    # at_brain_power_levels = [1, 2, 4, 8, 12, 16, 20]      
+    # stim_times_ms = [500]    
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 10
+    # pulse_on_time = 5
+    # head_sensor_rotation_angle = 270
+    # body_sensor_rotation_angle = 90
+    # notes = "WiChR stimulation in latSC (-1.4); 473 nm stim"
 
-    output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm"
-    at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]       
+    # output_folder = r"E:\DATA\dan\head_sensor\pitx2_projection_stim\pons"
+    # at_brain_power_levels = [1, 2, 4, 8, 16, 24, 32, 40]      
+    # stim_times_ms = [250]    
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270
+    # body_sensor_rotation_angle = 90
+    # notes = "pitx2 output stimulation in pons, 473 nm stim"
+
+    output_folder = r"E:\DATA\dan\head_sensor\pitx2_projection_stim\md"
+    at_brain_power_levels = [48]      
     stim_times_ms = [250]    
     num_cycles = 70
     stim_delay = 10000
@@ -206,62 +229,18 @@ if __name__ == "__main__":
     pulse_on_time = 10
     head_sensor_rotation_angle = 90
     body_sensor_rotation_angle = 90
-    notes = "3x Pitx2::ChR2 fiber excitation in vm"
+    notes = "pitx2 output stimulation in md, 473 nm stim; pre-perfusion"
 
-    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\pons"
-    # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10]       
-    # stim_times_ms = [250]    
-    # num_cycles = 70
-    # stim_delay = 10000
+    # output_folder = r"E:\DATA\dan\head_sensor\catch_array_test\mtdl3-1h"
+    # at_brain_power_levels = [4.5, 9, 10.4]      
+    # stim_times_ms = [250]        
+    # num_cycles = 40
+    # stim_delay = 5000
     # pulse_freq = 30
     # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 90
-    # notes = "3x Pitx2::ChR2 fiber excitation in vm"
-
-    # output_folder = r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm"
-    # at_brain_power_levels = [10]       
-    # stim_times_ms = [250]    
-    # num_cycles = 10
-    # stim_delay = 2000
-    # pulse_freq = 30
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 90
-    # notes = "3x Pitx2::ChR2 fiber excitation in vm"
-
-    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
-    # at_brain_power_levels = [5]      
-    # stim_times_ms = [1]    
-    # num_cycles = 1
-    # stim_delay = 3600000
-    # pulse_freq = 0
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 0
-    # notes = ""
-
-    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
-    # at_brain_power_levels = [5]      
-    # stim_times_ms = [1]    
-    # num_cycles = 1
-    # stim_delay = 180000
-    # pulse_freq = 0
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 0
-    # notes = ""
-
-    # output_folder = r"D:\test_output"
-    # at_brain_power_levels = [5]      
-    # stim_times_ms = [500]    
-    # num_cycles = 3
-    # stim_delay = 1000
-    # pulse_freq = 0
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 0
-    # notes = ""
+    # head_sensor_rotation_angle = 270 # chip forward
+    # body_sensor_rotation_angle = 90 # chip backward
+    # notes = "Mrs Array test (MTDL), pos = all"
 
     """
     -------------- Advanced setup (do not change or things will break): -------------------------------------------------
@@ -269,13 +248,21 @@ if __name__ == "__main__":
     # Initialize experiment control
     experiment = ExperimentControl(config_path)
 
+    # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
+    # --------> ONLY SELECT ONE <---------
+    laser_wavelength = '473nm'  # Options: '473nm' or '635nm'
+    # laser_wavelength = '635nm'  # Options: '473nm' or '635nm'
+    """ Note: when changing laser wavelength, remember to change/ check patch cord efficiencies above as needed."""
+    #----------------------------------------
+
     # Configure COM ports - ADJUST THESE AS NEEDED
     experiment.configure_ports(
-        stim_port='COM23',
-        head_port='COM24',
-        body_port='COM6',
-        daq_port='COM19',
-        laser_port='COM11'
+        stim_port='COM21',
+        head_port='COM5',
+        body_port='COM19',
+        daq_port='COM16',
+        laser_port_473nm='COM25',  # Blue laser (Cobolt 473nm)
+        laser_port_635nm='COM26'   # Red laser (635nm)
     )
 
     # configure camera settings
@@ -332,5 +319,6 @@ if __name__ == "__main__":
         run_stim_board=run_stim_board,
         channel_list=channel_list,
         camera_serial_number=camera_serial_number,
-        camera_fps=camera_fps
+        camera_fps=camera_fps,
+        laser_wavelength=laser_wavelength
     )

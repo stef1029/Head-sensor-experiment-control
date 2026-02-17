@@ -21,7 +21,9 @@ class ExperimentControl:
         self.head_sensor_port = 'COM24'
         self.body_sensor_port = 'COM6'
         self.arduino_daq_port = 'COM2'
-        self.laser_port = 'COM11'
+        self.laser_port_473nm = 'COM20'  # Blue laser (473nm)
+        self.laser_port_635nm = 'COM26'  # Red laser (635nm)
+        self.laser_port = self.laser_port_473nm  # Default to blue laser for backward compatibility
         
         self.baud_rate = 57600
         self.timeout = 2
@@ -42,15 +44,25 @@ class ExperimentControl:
         self.head_sensor_script = config.get("HEAD_SENSOR_SCRIPT")
         self.arduino_daq_path = config.get("SERIAL_LISTEN")
         self.camera_exe = config.get("BEHAVIOUR_CAMERA")
-        self.laser_control = str(config.get("LASER_CONTROL_SCRIPT"))
+        self.laser_control_473nm = str(config.get("LASER_CONTROL_SCRIPT"))
+        self.laser_control_635nm = str(config.get("RED_LASER_CONTROL_SCRIPT",
+            r"C:\Dev\projects\Head-sensor-experiment-control\red_laser_control.py"))
 
-    def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay):
+    def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, laser_wavelength='473nm'):
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
+        # Select the appropriate laser control script and port
+        if laser_wavelength == '473nm':
+            laser_script = self.laser_control_473nm
+            laser_port = self.laser_port_473nm
+        else:
+            laser_script = self.laser_control_635nm
+            laser_port = self.laser_port_635nm
+
         self.laser_control_process = subprocess.Popen([
-            self.python_exe, self.laser_control,
-            '--laser_port', self.laser_port,
+            self.python_exe, laser_script,
+            '--laser_port', laser_port,
             '--arduino_port', self.stim_board_port,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -58,13 +70,21 @@ class ExperimentControl:
              '--stim_delay', str(stim_delay)]
         )
 
-    def start_stim_board_test(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, pulse_freq=0, pulse_on_time=50):
+    def start_stim_board_test(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, pulse_freq=0, pulse_on_time=50, laser_wavelength='473nm'):
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
+        # Select the appropriate laser control script and port
+        if laser_wavelength == '473nm':
+            laser_script = self.laser_control_473nm
+            laser_port = self.laser_port_473nm
+        else:
+            laser_script = self.laser_control_635nm
+            laser_port = self.laser_port_635nm
+
         self.laser_control_process = subprocess.Popen([
-            self.python_exe, self.laser_control,
-            '--laser_port', self.laser_port,
+            self.python_exe, laser_script,
+            '--laser_port', laser_port,
             '--arduino_port', self.stim_board_port,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -158,7 +178,7 @@ class ExperimentControl:
             time.sleep(0.5)
         create_end_signal(self.output_path, "behaviour_control")
 
-    def save_metadata(self, 
+    def save_metadata(self,
                         output_folder,
                         mouse_id,
                         channel_list,
@@ -166,7 +186,7 @@ class ExperimentControl:
                         camera_fps=30,
                         video_window_width=640,
                         video_window_height=512,
-                        set_laser_powers=None, 
+                        set_laser_powers=None,
                         brain_laser_powers=None,
                         stim_times_ms=None,
                         num_cycles=None,
@@ -180,7 +200,8 @@ class ExperimentControl:
                         run_body_sensor=False,
                         run_camera=True,
                         run_arduino_daq=True,
-                        run_stim_board=True
+                        run_stim_board=True,
+                        laser_wavelength='473nm'
                       ):
         metadata_filename = os.path.join(self.output_path, f"{self.foldername}_metadata.json")
 
@@ -194,6 +215,7 @@ class ExperimentControl:
             'video_window_height': video_window_height,
             'set_laser_power_mW': set_laser_powers,
             'brain_laser_power_mW': brain_laser_powers,
+            'laser_wavelength': laser_wavelength,
             'stim_times_ms': stim_times_ms,
             'num_cycles': num_cycles,
             'stim_delay': stim_delay,
@@ -205,7 +227,7 @@ class ExperimentControl:
                                    f"{round((self.end_time - self.start_time) % 60)}s",
             'notes': notes,
             'run_head_sensor': run_head_sensor,
-            'run_body_sensor': run_body_sensor, 
+            'run_body_sensor': run_body_sensor,
             'run_camera': run_camera,
             'run_arduino_daq': run_arduino_daq,
             'run_stim_board': run_stim_board,
@@ -232,7 +254,7 @@ class ExperimentControl:
         
         delete_signal_files(self.output_path)
 
-    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None):
+    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None, laser_port_473nm=None, laser_port_635nm=None):
         if stim_port:
             self.stim_board_port = stim_port
         if head_port:
@@ -242,7 +264,11 @@ class ExperimentControl:
         if daq_port:
             self.arduino_daq_port = daq_port
         if laser_port:
-            self.laser_port = laser_port
+            self.laser_port = laser_port  # Backward compatibility
+        if laser_port_473nm:
+            self.laser_port_473nm = laser_port_473nm
+        if laser_port_635nm:
+            self.laser_port_635nm = laser_port_635nm
 
     def run_experiment(
         self,
@@ -253,7 +279,7 @@ class ExperimentControl:
         camera_fps=30,
         video_window_width=640,
         video_window_height=512,
-        set_laser_powers=None, 
+        set_laser_powers=None,
         brain_laser_powers=None,
         stim_times_ms=None,
         num_cycles=None,
@@ -267,7 +293,8 @@ class ExperimentControl:
         run_body_sensor=False,
         run_camera=True,
         run_arduino_daq=True,
-        run_stim_board=True
+        run_stim_board=True,
+        laser_wavelength='473nm'
     ):
         """Main method to run the experiment, requiring exactly 8 channel names."""
 
@@ -332,7 +359,8 @@ class ExperimentControl:
                 num_cycles,
                 stim_delay,
                 pulse_freq=pulse_freq,
-                pulse_on_time=pulse_on_time
+                pulse_on_time=pulse_on_time,
+                laser_wavelength=laser_wavelength
             )
             self.laser_control_process.wait()   # if using laser control board, wait for it to finish
             self.create_stim_signal()   # write signal file to indicate stim is complete
@@ -361,7 +389,7 @@ class ExperimentControl:
             camera_fps=camera_fps,
             video_window_width=video_window_width,
             video_window_height=video_window_height,
-            set_laser_powers=set_laser_powers, 
+            set_laser_powers=set_laser_powers,
             brain_laser_powers=brain_laser_powers,
             stim_times_ms=stim_times_ms,
             num_cycles=num_cycles,
@@ -375,7 +403,8 @@ class ExperimentControl:
             run_body_sensor=run_body_sensor,
             run_camera=run_camera,
             run_arduino_daq=run_arduino_daq,
-            run_stim_board=run_stim_board
+            run_stim_board=run_stim_board,
+            laser_wavelength=laser_wavelength
         )
 
         

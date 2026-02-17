@@ -1,0 +1,10 @@
+{
+    "TIMER_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\utils\\timer.py",
+    "PYTHON_PATH": "C:\\Users\\Public\\.conda\\behaviour_analysis\\python.exe",
+    "SERIAL_LISTEN": "C:\\Dev\\projects\\Head-sensor-experiment-control\\arduino_daq_giga_listen.py",
+    "BEHAVIOUR_CAMERA": "C:\\Dev\\projects\\Camera\\x64\\Release\\Camera_to_binary.exe",
+    "HEAD_SENSOR_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\head_sensor.py",
+    "LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\laser_control.py",
+    "RED_LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\red_laser_control.py",
+    "CALIBRATION_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\head_sensor_calibration_ctrl.py"
+}

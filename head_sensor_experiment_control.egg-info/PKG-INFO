@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: head_sensor_experiment_control
+Version: 0.1.0
+Summary: A module for controlling head sensor experiments.
+Author: Your Name
+License: MIT
+Requires-Dist: numpy<2.0
+Requires-Dist: keyboard
+Requires-Dist: pyserial
+Requires-Dist: pyqtgraph
+Requires-Dist: pynwb

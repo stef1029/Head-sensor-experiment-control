@@ -1,3 +1,37 @@
+# Head Sensor Experiment Control
+
+This module allows for controlling head sensor experiments. 
+
+## Installation
+
+To install the module, run:
+
+```bash
+pip install -e .
+```
+
+**Note:** You also need to manually install pycobolt from the GitHub repository:
+
+```bash
+pip install git+https://github.com/cobolt-lasers/pycobolt.git
+```
+
+## Requirements
+
+- numpy < 2.0
+- keyboard
+- pyserial
+- pyqtgraph
+- pynwb
+- pycobolt (install manually from GitHub)
+
+## Usage
+
+Run the module using:
+
+```bash
+python -m head_sensor_experiment_control
+```
 # Head Sensor System User Manual
 
 ## Quick Start Guide

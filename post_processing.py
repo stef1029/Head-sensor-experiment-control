@@ -316,40 +316,56 @@ def main():
         'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/catch_array_test/mtdl3-1d")} 
     cohort_directories.append(cohort_directory)
 
+    # cohort_directory = {
+    #     'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\Saline")} 
+    # cohort_directories.append(cohort_directory)
+
+    # cohort_directory = {
+    #     'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ")} 
+    # cohort_directories.append(cohort_directory)
+
+    # cohort_directory = {
+    #     'local': Path(r"E:\DATA\dan\head_sensor\catch_array_test\mtdl3-1d")} 
+    # cohort_directories.append(cohort_directory)
+
+    # cohort_directory = {
+    #     'local': Path(r"E:\DATA\dan\head_sensor\catch_array_test\mtdl3-1h")} 
+    # cohort_directories.append(cohort_directory)
+
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/catch_array_test/mtdl3-1h")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\WiChR")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/bipoles_635")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\stgtacr2")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/ChrimsonR")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\ChrimsonR")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/ChRmine")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\ChRmine")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/stgtacr2")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\bipoles_635")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/WiChR")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\bipoles_473")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/md")} 
+        'local': Path(r"E:\DATA\dan\head_sensor\pitx2_projection_stim\pons")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/pons")} 
+        'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\Saline")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/vm")} 
+        'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ")} 
     cohort_directories.append(cohort_directory)
 
     
