@@ -178,8 +178,9 @@ class Analysis_manager_openfield:
         
         print(f"Found {len(pulse_times)} pulses in ArduinoDAQ for {channel_name} channel (before filtering).")
         
-        # Filter out startup/zeroing pulses
-        pulse_times = self.filter_startup_pulses(pulse_times, channel_name)
+        # Filter out startup/zeroing pulses (only for sensor channels, not camera or laser)
+        if channel_name in ['HEADSENSOR_SYNC', 'BODYSENSOR_SYNC']:
+            pulse_times = self.filter_startup_pulses(pulse_times, channel_name)
         
         return pulse_times, daq_timestamps
 
@@ -205,9 +206,8 @@ class Analysis_manager_openfield:
         rising_times = daq_timestamps[rising_indices + 1]
         falling_times = daq_timestamps[falling_indices + 1]
         
-        # Filter out startup/zeroing pulses
-        rising_times = self.filter_startup_pulses(rising_times, channel_name + '_rising')
-        falling_times = self.filter_startup_pulses(falling_times, channel_name + '_falling')
+        # Note: Laser events are not filtered for startup blips
+        # (filtering is only applied to sensor channels)
         
         # Handle case where we have unequal number of rising and falling edges
         min_len = min(len(rising_times), len(falling_times))

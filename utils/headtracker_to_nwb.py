@@ -38,12 +38,12 @@ def detect_rising_edges(signal, timestamps, threshold=0.5):
     """
     signal = np.asarray(signal)
     if len(signal) == 0:
-        return np.array([])
+        return np.array([], dtype=int)
 
     above_thresh = signal >= threshold
     rising = (above_thresh[1:] == True) & (above_thresh[:-1] == False)
     edge_indices = np.where(rising)[0] + 1  # +1 offset because we shifted by 1
-    return edge_indices
+    return edge_indices.astype(int)
 
 def detect_falling_edges(signal, timestamps, threshold=0.5):
     """
@@ -59,12 +59,12 @@ def detect_falling_edges(signal, timestamps, threshold=0.5):
     """
     signal = np.asarray(signal)
     if len(signal) == 0:
-        return np.array([])
+        return np.array([], dtype=int)
 
     above_thresh = signal >= threshold
     falling = (above_thresh[1:] == False) & (above_thresh[:-1] == True)
     edge_indices = np.where(falling)[0] + 1  # +1 offset because we shifted by 1
-    return edge_indices
+    return edge_indices.astype(int)
 
 def extract_pulse_durations(signal, timestamps, threshold=0.5, min_duration_ms=0.01):
     """

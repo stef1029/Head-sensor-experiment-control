@@ -305,23 +305,51 @@ def main():
     # cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"D:\head_sensor_exp\pitx2_proj_excite\pons")} 
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/251008_Pitx2-Catch-Array")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"D:\head_sensor_exp\pitx2_proj_excite\md")} 
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/251031_opto_Pitx2_excite_medulla")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\md")} 
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/catch_array_test/mtdl3-1d")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\pons")} 
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/catch_array_test/mtdl3-1h")} 
     cohort_directories.append(cohort_directory)
 
     cohort_directory = {
-        'local': Path(r"C:\DATA\head_sensor_exp\pitx2_proj_excite\vm")} 
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/bipoles_635")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/ChrimsonR")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/ChRmine")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/stgtacr2")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/opsin_optimisation/WiChR")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/md")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/pons")} 
+    cohort_directories.append(cohort_directory)
+
+    cohort_directory = {
+        'local': Path(r"/cephfs2/srogers/Head_Sensor_Data/Dan/head_sensor_exp/pitx2_proj_excite/vm")} 
     cohort_directories.append(cohort_directory)
 
     
@@ -344,18 +372,18 @@ def main():
     # Store the sessions that need processing for the cohorts
     sessions_map = {}
 
-    refresh = False  # Set to True to reprocess already processed sessions
+    refresh = True  # Set to True to reprocess already processed sessions
 
     # Phase 1: Gather sessions, compress videos for each
     print("\n=== PHASE 1: Gathering sessions & compressing videos ===")
     for cd in cohort_directories:
         sessions_to_process = find_sessions_to_process(cd, refresh=refresh)
         sessions_map[cd['local']] = sessions_to_process
-        if sessions_to_process:
-            print(f"\nFound {len(sessions_to_process)} sessions needing processing in {cd['local']}. Compressing videos...")
-            process_cohort_videos(cd['local'])
-        else:
-            print(f"No sessions to process in {cd['local']}. Skipping compression.")
+        # if sessions_to_process:
+        #     print(f"\nFound {len(sessions_to_process)} sessions needing processing in {cd['local']}. Compressing videos...")
+        #     process_cohort_videos(cd['local'])
+        # else:
+        #     print(f"No sessions to process in {cd['local']}. Skipping compression.")
 
     # Phase 2: Post-process all sessions
     print("\n=== PHASE 2: Post-processing sessions ===")
@@ -371,7 +399,7 @@ def main():
     # for cd in cohort_directories:
     #     print(f"Syncing {cd['rsync_local']} to {cd['rsync_cephfs_mapped']}...")
     #     sync_with_cephfs(cd['rsync_local'], cd['rsync_cephfs_mapped'])
-    print("\n=== PHASE 3: Syncing switched off. Move files manually. ===")
+    # print("\n=== PHASE 3: Syncing switched off. Move files manually. ===")
 
     print("\nAll requested directories have been processed and synced successfully.")
 
