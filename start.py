@@ -50,13 +50,22 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"C:\DATA\251031_opto_Pitx2_excite_medulla"
-    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10, 15]   
-    # # stim_times_ms = [250] 
-    # at_brain_power_levels = [10]   
-    # stim_times_ms = [1000]       
-    # num_cycles = 70
-    # stim_delay = 5000
+    # output_folder = r"d:\head_sensor_exp\pitx2_proj_excite\md"
+    # at_brain_power_levels = [3, 5, 7, 10, 15, 20, 30]   
+    # stim_times_ms = [250]        
+    # num_cycles = 100
+    # stim_delay = 10000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # rotation_angle = 270 # chip forward
+    # # # rotation_angle = 90 # chip backward
+    # notes = "test"
+
+    # output_folder = r"d:\head_sensor_exp\pitx2_proj_excite\pons"
+    # # at_brain_power_levels = [0.5, 1, 2, 3, 5, 7, 10]   
+    # # stim_times_ms = [250]        
+    # num_cycles = 100
+    # stim_delay = 10000
     # pulse_freq = 30 
     # pulse_on_time = 10
     # rotation_angle = 270 # chip forward
