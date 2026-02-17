@@ -1,0 +1,60 @@
+{
+    "boards": {
+
+        "473_laser_1": {
+            "description": "USB Serial Device (COM20)",
+            "vid": "0x25dc",
+            "pid": "0x6",
+            "serial_number": "000013245678",
+            "baudrate": 115200
+        },
+
+        "473_laser_2": {
+            "description": "USB Serial Device (COM25)",
+            "vid": "0x25dc",
+            "pid": "0x6",
+            "serial_number": null,
+            "baudrate": 115200
+        },
+
+        "635nm_laser_1": {
+            "description": "Prolific PL2303GT USB Serial COM Port (COM26)",
+            "vid": "0x67b",
+            "pid": "0x23a3",
+            "serial_number": "DODNB2A4517",
+            "baudrate": 9600
+        },
+
+        "imu_exp_daq": {
+            "description": "USB Serial Device (COM16)",
+            "vid": "0x2341",
+            "pid": "0x266",
+            "serial_number": "0019003C3033511233323537",
+            "baudrate": 115200
+        },
+
+        "body_imu": {
+            "description": "Arduino Mega 2560 (COM19)",
+            "vid": "0x2a03",
+            "pid": "0x42",
+            "serial_number": "8553530363635131F001",
+            "baudrate": 57600
+        },
+
+        "head_imu": {
+            "description": "Arduino Mega 2560 (COM5)",
+            "vid": "0x2341",
+            "pid": "0x42",
+            "serial_number": "9533432343035101E0A0",
+            "baudrate": 57600
+        },
+
+        "laser_pulse_board": {
+            "description": "Arduino Mega 2560 (COM21)",
+            "vid": "0x2341",
+            "pid": "0x42",
+            "serial_number": "95931323931351515292",
+            "baudrate": 57600
+        }
+    }
+}

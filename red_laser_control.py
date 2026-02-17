@@ -269,8 +269,9 @@ def cleanup(laser, arduino):
 
 def main():
     parser = argparse.ArgumentParser(description='Red laser stimulation coordinator')
-    parser.add_argument('--laser_port', type=str, default='COM26', help='COM port for red laser')
-    parser.add_argument('--arduino_port', type=str, default='COM23', help='COM port for Arduino')
+    parser.add_argument('--registry', type=str, required=True, help='Path to board_registry.json')
+    parser.add_argument('--laser_board', type=str, default='635nm_laser_1', help='Board tag for the red laser')
+    parser.add_argument('--arduino_board', type=str, default='laser_pulse_board', help='Board tag for the Arduino')
     parser.add_argument('--powers', type=float, nargs='+', default=[5.0, 10.0, 15.0],
                         help='List of powers (mW) to cycle through')
     parser.add_argument('--stim_times', type=int, nargs='+',
@@ -285,6 +286,15 @@ def main():
     parser.add_argument('--pulse_on_time', type=int, default=50,
                         help='Pulse on time in milliseconds (0 for solid pulse)')
     args = parser.parse_args()
+
+    # Resolve board tags to COM ports
+    from utils.board_registry import BoardRegistry
+    registry = BoardRegistry(args.registry)
+    laser_port = registry.find_board_port(args.laser_board)
+    arduino_port = registry.find_board_port(args.arduino_board)
+    laser_baudrate = registry.get_baudrate(args.laser_board)
+    print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + f" Laser '{args.laser_board}' resolved to {laser_port}")
+    print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + f" Arduino '{args.arduino_board}' resolved to {arduino_port}")
 
     laser = None
     arduino = None
@@ -305,7 +315,7 @@ def main():
 
         # Initialize laser
         print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + "Initializing red laser...")
-        laser = RedLaser(port=args.laser_port)
+        laser = RedLaser(port=laser_port, baudrate=laser_baudrate)
         laser.connect()
 
         # Turn laser ON first (required before setting power, Arduino will gate the output)
@@ -320,7 +330,7 @@ def main():
 
         # Setup Arduino
         print(Fore.GREEN + "Red Laser control:" + Style.RESET_ALL + "Initializing Arduino...")
-        arduino = setup_arduino(args.arduino_port, args.stim_times,
+        arduino = setup_arduino(arduino_port, args.stim_times,
                               args.num_cycles, args.stim_delay,
                               args.pulse_freq, args.pulse_on_time)
 

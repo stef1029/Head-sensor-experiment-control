@@ -6,5 +6,6 @@
     "HEAD_SENSOR_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\head_sensor.py",
     "LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\laser_control.py",
     "RED_LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\red_laser_control.py",
-    "CALIBRATION_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\head_sensor_calibration_ctrl.py"
+    "CALIBRATION_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\head_sensor_calibration_ctrl.py",
+    "BOARD_REGISTRY": "C:\\Dev\\projects\\Head-sensor-experiment-control\\board_registry.json"
 }

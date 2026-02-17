@@ -256,13 +256,20 @@ def read_sensor(head_sensor,
 def main():
 
     parser = argparse.ArgumentParser(description='Listen to serial port and save data.')
-    parser.add_argument('--port', type=str, default='COM24', help='COM port for the head sensor (e.g., COM24)')
+    parser.add_argument('--board', type=str, default='head_imu', help='Board tag name from board_registry.json')
+    parser.add_argument('--registry', type=str, required=True, help='Path to board_registry.json')
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
     parser.add_argument('--rotation', type=float, default=90, help='Rotation angle in degrees')
     parser.add_argument('--sensor_location', type=str, default='head', help='Location of the sensor (e.g., head, body)')
     args = parser.parse_args()
+
+    # Resolve board tag to COM port
+    from utils.board_registry import BoardRegistry
+    registry = BoardRegistry(args.registry)
+    resolved_port = registry.find_board_port(args.board)
+    print(Fore.BLUE + f"{args.sensor_location} sensor:" + Style.RESET_ALL + f" Board '{args.board}' resolved to {resolved_port}")
 
     angle_display = adw.AngleDisplay(window_title=f"{args.sensor_location.capitalize()} Sensor Angles")
 
@@ -309,11 +316,11 @@ def main():
 
         # Initialize serial connections
         try:
-            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(resolved_port, baud_rate, timeout=timeout)
         except serial.SerialException as e:
             print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + f"Serial error: {e}, retrying connection")
             time.sleep(1)
-            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(resolved_port, baud_rate, timeout=timeout)
         time.sleep(2)  # Give some time for the connection to settle
         head_sensor.reset_input_buffer()
 
@@ -331,7 +338,7 @@ def main():
             print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
             time.sleep(2)
-            head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
+            head_sensor = serial.Serial(resolved_port, baud_rate, timeout=timeout)
             time.sleep(2)  # Give some time for the connection to settle
             head_sensor.reset_input_buffer()
 
@@ -348,7 +355,7 @@ def main():
                 print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
                 head_sensor.close()
                 time.sleep(2)
-                head_sensor = serial.Serial(args.port, baud_rate, timeout=timeout)
+                head_sensor = serial.Serial(resolved_port, baud_rate, timeout=timeout)
                 time.sleep(2)  # Give some time for the connection to settle
                 head_sensor.reset_input_buffer()
 
@@ -385,7 +392,7 @@ def main():
         except:
             pass
     else:
-        calibrate(args.port)
+        calibrate(resolved_port)
 
 
 if __name__ == "__main__":

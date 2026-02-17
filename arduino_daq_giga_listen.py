@@ -280,13 +280,20 @@ def main():
     parser.add_argument('--id', type=str, help='mouse ID')
     parser.add_argument('--date', type=str, help='date_time')
     parser.add_argument('--path', type=str, help='path')
-    parser.add_argument('--port', type=str, default='COM2', help='COM port')
+    parser.add_argument('--registry', type=str, required=True, help='Path to board_registry.json')
+    parser.add_argument('--board', type=str, default='imu_exp_daq', help='Board tag name from board_registry.json')
     parser.add_argument(
         '--channels',
         type=str,
         help="Comma-separated list of 8 channel names (e.g. 'IN3V3_2_camera,IN3V3_3,IN3V3_4,IN3V3_5,IN5V_6_head_sensor,IN5V_7_laser,IN5V_8,IN5V_9')"
     )
     args = parser.parse_args()
+
+    # Resolve board tag to COM port
+    from utils.board_registry import BoardRegistry
+    registry = BoardRegistry(args.registry)
+    resolved_port = registry.find_board_port(args.board)
+    print(Fore.YELLOW + "ArduinoDAQ:" + Style.RESET_ALL + f" Board '{args.board}' resolved to {resolved_port}")
 
     if not args.channels:
         print("Error: You must provide exactly 8 channel names via --channels.")
@@ -310,7 +317,7 @@ def main():
                 new_mouse_ID=mouse_ID,
                 new_date_time=date_time,
                 new_path=path,
-                port=args.port
+                port=resolved_port
             )
         )
     except Exception:

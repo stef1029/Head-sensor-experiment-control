@@ -16,14 +16,13 @@ class ExperimentControl:
     def __init__(self, config_path=r"C:\dev\projects\head_sensor_config.json"):
         self.config_path = config_path
         
-        # Default COM ports (editable)
-        self.stim_board_port = 'COM23'
-        self.head_sensor_port = 'COM24'
-        self.body_sensor_port = 'COM6'
-        self.arduino_daq_port = 'COM2'
-        self.laser_port_473nm = 'COM20'  # Blue laser (473nm)
-        self.laser_port_635nm = 'COM26'  # Red laser (635nm)
-        self.laser_port = self.laser_port_473nm  # Default to blue laser for backward compatibility
+        # Board tag names (human-readable, resolved via board registry)
+        self.stim_board_tag = 'laser_pulse_board'
+        self.head_sensor_tag = 'head_imu'
+        self.body_sensor_tag = 'body_imu'
+        self.arduino_daq_tag = 'imu_exp_daq'
+        self.laser_tag_473nm = '473_laser_1'
+        self.laser_tag_635nm = '635nm_laser_1'
         
         self.baud_rate = 57600
         self.timeout = 2
@@ -47,23 +46,32 @@ class ExperimentControl:
         self.laser_control_473nm = str(config.get("LASER_CONTROL_SCRIPT"))
         self.laser_control_635nm = str(config.get("RED_LASER_CONTROL_SCRIPT",
             r"C:\Dev\projects\Head-sensor-experiment-control\red_laser_control.py"))
+        
+        # Board registry path
+        registry_path = config.get("BOARD_REGISTRY")
+        if not registry_path:
+            raise FileNotFoundError(
+                f"Config '{self.config_path}' does not contain a 'BOARD_REGISTRY' key."
+            )
+        self.registry_path = registry_path
 
     def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, laser_wavelength='473nm'):
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script and port
+        # Select the appropriate laser control script and tag
         if laser_wavelength == '473nm':
             laser_script = self.laser_control_473nm
-            laser_port = self.laser_port_473nm
+            laser_tag = self.laser_tag_473nm
         else:
             laser_script = self.laser_control_635nm
-            laser_port = self.laser_port_635nm
+            laser_tag = self.laser_tag_635nm
 
         self.laser_control_process = subprocess.Popen([
             self.python_exe, laser_script,
-            '--laser_port', laser_port,
-            '--arduino_port', self.stim_board_port,
+            '--registry', self.registry_path,
+            '--laser_board', laser_tag,
+            '--arduino_board', self.stim_board_tag,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
             ['--num_cycles', str(num_cycles),
@@ -74,18 +82,19 @@ class ExperimentControl:
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script and port
+        # Select the appropriate laser control script and tag
         if laser_wavelength == '473nm':
             laser_script = self.laser_control_473nm
-            laser_port = self.laser_port_473nm
+            laser_tag = self.laser_tag_473nm
         else:
             laser_script = self.laser_control_635nm
-            laser_port = self.laser_port_635nm
+            laser_tag = self.laser_tag_635nm
 
         self.laser_control_process = subprocess.Popen([
             self.python_exe, laser_script,
-            '--laser_port', laser_port,
-            '--arduino_port', self.stim_board_port,
+            '--registry', self.registry_path,
+            '--laser_board', laser_tag,
+            '--arduino_board', self.stim_board_tag,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
             ['--num_cycles', str(num_cycles),
@@ -127,7 +136,8 @@ class ExperimentControl:
             '--id', self.mouse_id,
             '--date', self.date_time,
             '--path', self.output_path,
-            '--port', self.arduino_daq_port,
+            '--registry', self.registry_path,
+            '--board', self.arduino_daq_tag,
             '--channels', ",".join(self.channel_list)
         ])
 
@@ -154,7 +164,7 @@ class ExperimentControl:
         self.camera_process = subprocess.Popen(tracker_command)
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Camera tracking started.")
 
-    def start_imu_sensor(self, port, 
+    def start_imu_sensor(self, board_tag, 
                          signal_name, 
                          rotation_angle, 
                          sensor_location="head"):
@@ -163,11 +173,12 @@ class ExperimentControl:
             '--id', self.mouse_id,
             '--date', self.date_time,
             '--path', self.output_path,
-            '--port', port,
+            '--registry', self.registry_path,
+            '--board', board_tag,
             '--rotation', str(rotation_angle),
             '--sensor_location', sensor_location,
         ])
-        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Head sensor script started.")
+        print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + f" {sensor_location.capitalize()} sensor script started ({board_tag}).")
         return imu_process
 
     def wait_for_completion(self):
@@ -254,21 +265,21 @@ class ExperimentControl:
         
         delete_signal_files(self.output_path)
 
-    def configure_ports(self, stim_port=None, head_port=None, body_port=None, daq_port=None, laser_port=None, laser_port_473nm=None, laser_port_635nm=None):
-        if stim_port:
-            self.stim_board_port = stim_port
-        if head_port:
-            self.head_sensor_port = head_port
-        if body_port:
-            self.body_sensor_port = body_port
-        if daq_port:
-            self.arduino_daq_port = daq_port
-        if laser_port:
-            self.laser_port = laser_port  # Backward compatibility
-        if laser_port_473nm:
-            self.laser_port_473nm = laser_port_473nm
-        if laser_port_635nm:
-            self.laser_port_635nm = laser_port_635nm
+    def configure_boards(self, stim_board=None, head_sensor=None, body_sensor=None, 
+                         daq_board=None, laser_473nm=None, laser_635nm=None):
+        """Set board tag names (human-readable names from board_registry.json)."""
+        if stim_board:
+            self.stim_board_tag = stim_board
+        if head_sensor:
+            self.head_sensor_tag = head_sensor
+        if body_sensor:
+            self.body_sensor_tag = body_sensor
+        if daq_board:
+            self.arduino_daq_tag = daq_board
+        if laser_473nm:
+            self.laser_tag_473nm = laser_473nm
+        if laser_635nm:
+            self.laser_tag_635nm = laser_635nm
 
     def run_experiment(
         self,
@@ -341,12 +352,12 @@ class ExperimentControl:
         if self.run_camera:
             self.start_camera_tracking()
         if self.run_head_sensor:
-            self.head_sensor_process = self.start_imu_sensor(port=self.head_sensor_port, 
+            self.head_sensor_process = self.start_imu_sensor(board_tag=self.head_sensor_tag, 
                                   signal_name="head_sensor",
                                   rotation_angle=self.head_sensor_rotation_angle,
                                   sensor_location="head",)
         if self.run_body_sensor:
-            self.body_sensor_process = self.start_imu_sensor(port=self.body_sensor_port, 
+            self.body_sensor_process = self.start_imu_sensor(board_tag=self.body_sensor_tag, 
                                   signal_name="body_sensor",
                                   rotation_angle=self.body_sensor_rotation_angle,
                                   sensor_location="body",)
@@ -411,36 +422,3 @@ class ExperimentControl:
         self.cleanup_processes()
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Experiment finished running.\a")
 
-
-if __name__ == "__main__":
-    # Example usage
-    output_folder = r"C:\Users\Tripodi Group\Videos\2501 - openfield experiment output"
-    config_path = r"C:\dev\projects\head_sensor_config.json"
-
-    mouse_id = "test1"
-    
-    # Channel list must have exactly 8 entries
-    example_channel_list = [
-        "IN3V3_2_camera",
-        "IN3V3_3",
-        "IN3V3_4",
-        "IN3V3_5",
-        "IN5V_6_head_sensor",
-        "IN5V_7_laser",
-        "IN5V_8",
-        "IN5V_9"
-    ]
-
-    experiment = ExperimentControl(config_path=config_path)
-    experiment.configure_ports(
-        stim_port='COM23',
-        head_port='COM24',
-        daq_port='COM18',
-        laser_port='COM11'
-    )
-
-    experiment.run_experiment(
-        output_folder=output_folder,
-        mouse_id=mouse_id,
-        channel_list=example_channel_list
-    )

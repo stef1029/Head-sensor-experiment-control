@@ -242,11 +242,6 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 90 # chip backward
     # notes = "Mrs Array test (MTDL), pos = all"
 
-    """
-    -------------- Advanced setup (do not change or things will break): -------------------------------------------------
-    """
-    # Initialize experiment control
-    experiment = ExperimentControl(config_path)
 
     # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
     # --------> ONLY SELECT ONE <---------
@@ -255,14 +250,20 @@ if __name__ == "__main__":
     """ Note: when changing laser wavelength, remember to change/ check patch cord efficiencies above as needed."""
     #----------------------------------------
 
-    # Configure COM ports - ADJUST THESE AS NEEDED
-    experiment.configure_ports(
-        stim_port='COM21',
-        head_port='COM5',
-        body_port='COM19',
-        daq_port='COM16',
-        laser_port_473nm='COM25',  # Blue laser (Cobolt 473nm)
-        laser_port_635nm='COM26'   # Red laser (635nm)
+    """
+    -------------- Advanced setup (do not change or things will break): -------------------------------------------------
+    """
+    # Initialize experiment control
+    experiment = ExperimentControl(config_path)
+
+    # Configure board tags (human-readable names from board_registry.json)
+    experiment.configure_boards(
+        stim_board='laser_pulse_board',
+        head_sensor='head_imu',
+        body_sensor='body_imu',
+        daq_board='imu_exp_daq',
+        laser_473nm='473_laser_1',   # Blue laser (Cobolt 473nm)
+        laser_635nm='635nm_laser_1'  # Red laser (635nm)
     )
 
     # configure camera settings
