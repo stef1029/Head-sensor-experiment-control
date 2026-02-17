@@ -19,8 +19,8 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "mtdl3-1h"
-    # fiber_TE = 80
+    mouse_id = "mtaq27-1e"
+    # fiber_TE = 
 
     # patch_cord_TE = 30 # 2025-09-24
     # patch_cord_TE = 64 # actual value
@@ -32,8 +32,8 @@ if __name__ == "__main__":
     # patch_cord_TE = 40 # cord 6 on array
     # patch_cord_TE = 13 # 2025-10-31
 
-    fiber_TE = 100 
-    patch_cord_TE = 100
+    fiber_TE = 85
+    patch_cord_TE = 70
 
 
 
@@ -177,27 +177,50 @@ if __name__ == "__main__":
     """
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
-    # output_folder = r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ"
-    # at_brain_power_levels = [5]      
-    # stim_times_ms = [1]    
-    # num_cycles = 1
-    # stim_delay = 3600000
-    # pulse_freq = 0
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90
-    # body_sensor_rotation_angle = 0
-    # notes = ""
 
-    output_folder = r"E:\test_output"
-    at_brain_power_levels = [100]      
-    stim_times_ms = [100]    
-    num_cycles = 10
-    stim_delay = 500
-    pulse_freq = 0
+    # output_folder = r"E:\DATA\dan\head_sensor\tests"
+    # at_brain_power_levels = [60]      
+    # stim_times_ms = [250]    
+    # num_cycles = 2
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 90                                                                                                                    
+    # body_sensor_rotation_angle = 90
+    # notes = "test of strong Pitx2 terminal stimulation in MD"
+    
+    # output_folder = r"E:\DATA\dan\head_sensor\opsin_optimisation\WiChR"
+    # at_brain_power_levels = [1, 2, 4, 8, 12, 16, 20]      
+    # stim_times_ms = [500]    
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 10
+    # pulse_on_time = 5
+    # head_sensor_rotation_angle = 270
+    # body_sensor_rotation_angle = 90
+    # notes = "WiChR stimulation in latSC (-1.4); 473 nm stim"
+
+    # output_folder = r"E:\DATA\dan\head_sensor\pitx2_projection_stim\pons"
+    # at_brain_power_levels = [1, 2, 4, 8, 16, 24, 32, 40]      
+    # stim_times_ms = [250]    
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270
+    # body_sensor_rotation_angle = 90
+    # notes = "pitx2 output stimulation in pons, 473 nm stim"
+
+    output_folder = r"E:\DATA\dan\head_sensor\pitx2_projection_stim\md"
+    at_brain_power_levels = [48]      
+    stim_times_ms = [250]    
+    num_cycles = 70
+    stim_delay = 10000
+    pulse_freq = 30
     pulse_on_time = 10
     head_sensor_rotation_angle = 90
-    body_sensor_rotation_angle = 0
-    notes = ""
+    body_sensor_rotation_angle = 90
+    notes = "pitx2 output stimulation in md, 473 nm stim; pre-perfusion"
 
     # output_folder = r"E:\DATA\dan\head_sensor\catch_array_test\mtdl3-1h"
     # at_brain_power_levels = [4.5, 9, 10.4]      
@@ -241,7 +264,7 @@ if __name__ == "__main__":
 
     # Turn items in experiment on/off
     run_head_sensor = True
-    run_body_sensor = False
+    run_body_sensor = True
     run_camera = True
     run_arduino_daq = True
     run_stim_board = True
