@@ -9,6 +9,7 @@ import keyboard
 import h5py
 import json
 import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.utils import create_end_signal
 import asyncio
 import threading

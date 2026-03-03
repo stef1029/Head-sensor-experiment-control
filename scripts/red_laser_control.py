@@ -4,6 +4,8 @@ import sys
 import serial
 import keyboard
 from colorama import init, Fore, Style
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 init()
 exit_key = 'del'

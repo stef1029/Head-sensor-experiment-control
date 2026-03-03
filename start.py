@@ -7,7 +7,7 @@ import os
 from utils.experiment_control_class import ExperimentControl
 
 if __name__ == "__main__":
-    config_path = r"C:\Dev\projects\Head-sensor-experiment-control\head_sensor_config.json"
+    config_path = r"C:\Dev\projects\Head-sensor-experiment-control\config\head_sensor_config.json"
     
     # Load the configuration file to get the calibration script path
     with open(config_path, 'r') as f:

@@ -4,6 +4,8 @@ import serial
 import keyboard
 import argparse
 from colorama import init, Fore, Back, Style
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.calibrate_magnetometer import calibrate_magnetometer_header
 

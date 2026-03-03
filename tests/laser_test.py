@@ -9,7 +9,7 @@ Default COM ports are taken from start.py:
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scripts')))
 
 from red_laser_control import RedLaser, setup_arduino, read_arduino_output
 import serial

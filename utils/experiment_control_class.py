@@ -13,7 +13,7 @@ from utils import countdown_timer, check_for_signal_file, delete_signal_files, c
 init()
 
 class ExperimentControl:
-    def __init__(self, config_path=r"C:\dev\projects\head_sensor_config.json"):
+    def __init__(self, config_path=r"C:\Dev\projects\Head-sensor-experiment-control\config\head_sensor_config.json"):
         self.config_path = config_path
         
         # Board tag names (human-readable, resolved via board registry)
