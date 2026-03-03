@@ -32,8 +32,8 @@ if __name__ == "__main__":
     # patch_cord_TE = 40 # cord 6 on array
     # patch_cord_TE = 13 # 2025-10-31
 
-    fiber_TE = 64
-    patch_cord_TE = 72
+    fiber_TE = 100
+    patch_cord_TE = 100
 
 
 
@@ -187,16 +187,16 @@ if __name__ == "__main__":
     -------------- Set experiment parameters here ----------------------------------------------------------------
     """
 
-    # output_folder = r"E:\DATA\dan\head_sensor\tests"
-    # at_brain_power_levels = [10]      
-    # stim_times_ms = [250]    
-    # num_cycles = 2
-    # stim_delay = 5000
-    # pulse_freq = 30
-    # pulse_on_time = 10
-    # head_sensor_rotation_angle = 90                                                                                                                    
-    # body_sensor_rotation_angle = 90
-    # notes = "test of TE for array"
+    output_folder = r"E:\DATA\dan\head_sensor\tests"
+    at_brain_power_levels = [10]      
+    stim_times_ms = [250]    
+    num_cycles = 2
+    stim_delay = 5000
+    pulse_freq = 30
+    pulse_on_time = 10
+    head_sensor_rotation_angle = 90                                                                                                                    
+    body_sensor_rotation_angle = 90
+    notes = "test of TE for array"
     
     # output_folder = r"E:\DATA\dan\head_sensor\opsin_optimisation\stgtacr2"
     # at_brain_power_levels = [1, 2, 4, 8, 12, 16, 20]      
@@ -231,16 +231,16 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 90
     # notes = "pitx2 output stimulation in md, 473 nm stim; pre-perfusion"
 
-    output_folder = r"E:\DATA\dan\head_sensor\4_fiber_array_test"
-    at_brain_power_levels = [40]      
-    stim_times_ms = [1000]        
-    num_cycles = 40
-    stim_delay = 10000
-    pulse_freq = 30
-    pulse_on_time = 10
-    head_sensor_rotation_angle = 270 # chip forward
-    body_sensor_rotation_angle = 90 # chip backward
-    notes = "4x fiber array in SC, -1.4ML, position 4, no body sensor"
+    # output_folder = r"E:\DATA\dan\head_sensor\4_fiber_array_test"
+    # at_brain_power_levels = [40]      
+    # stim_times_ms = [1000]        
+    # num_cycles = 40
+    # stim_delay = 10000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270 # chip forward
+    # body_sensor_rotation_angle = 90 # chip backward
+    # notes = "4x fiber array in SC, -1.4ML, position 4, no body sensor"
 
 
     # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
