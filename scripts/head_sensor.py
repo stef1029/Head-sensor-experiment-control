@@ -358,6 +358,12 @@ def main():
                 head_sensor.flush()  # Ensure the command is transmitted
                 initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
 
+        # Stop the sensor cleanly before switching to full recording mode
+        head_sensor.write(b'e')
+        head_sensor.flush()
+        head_sensor.reset_input_buffer()
+        time.sleep(0.5)
+
         # Only send start command (with sync pulses) once zeroing has succeeded
         head_sensor.write(b's')
         head_sensor.flush()  # Ensure the command is transmitted
