@@ -336,9 +336,9 @@ def main():
     #     'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\WiChR")} 
     # cohort_directories.append(cohort_directory)
 
-    cohort_directory = {
-        'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\stgtacr2")} 
-    cohort_directories.append(cohort_directory)
+    # cohort_directory = {
+    #     'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\stgtacr2")} 
+    # cohort_directories.append(cohort_directory)
 
     # cohort_directory = {
     #     'local': Path(r"E:\DATA\dan\head_sensor\opsin_optimisation\ChrimsonR")} 
@@ -368,8 +368,12 @@ def main():
     #     'local': Path(r"D:\Pitx2_Inhib_DTx\Baseline_movements\DCZ")} 
     # cohort_directories.append(cohort_directory)
 
+    # cohort_directory = {
+    #     'local': Path(r"E:\DATA\dan\head_sensor\4_fiber_array_test")} 
+    # cohort_directories.append(cohort_directory)
+
     cohort_directory = {
-        'local': Path(r"E:\DATA\dan\head_sensor\4_fiber_array_test")} 
+        'local': Path(r"E:\test_output")} 
     cohort_directories.append(cohort_directory)
 
     
@@ -392,18 +396,18 @@ def main():
     # Store the sessions that need processing for the cohorts
     sessions_map = {}
 
-    refresh = True  # Set to True to reprocess already processed sessions
+    refresh = False  # Set to True to reprocess already processed sessions
 
     # Phase 1: Gather sessions, compress videos for each
     print("\n=== PHASE 1: Gathering sessions & compressing videos ===")
     for cd in cohort_directories:
         sessions_to_process = find_sessions_to_process(cd, refresh=refresh)
         sessions_map[cd['local']] = sessions_to_process
-        # if sessions_to_process:
-        #     print(f"\nFound {len(sessions_to_process)} sessions needing processing in {cd['local']}. Compressing videos...")
-        #     process_cohort_videos(cd['local'])
-        # else:
-        #     print(f"No sessions to process in {cd['local']}. Skipping compression.")
+        if sessions_to_process:
+            print(f"\nFound {len(sessions_to_process)} sessions needing processing in {cd['local']}. Compressing videos...")
+            process_cohort_videos(cd['local'])
+        else:
+            print(f"No sessions to process in {cd['local']}. Skipping compression.")
 
     # Phase 2: Post-process all sessions
     print("\n=== PHASE 2: Post-processing sessions ===")

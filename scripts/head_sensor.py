@@ -331,10 +331,7 @@ def main():
 
         # Zero the initial values
         initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
-        
-        # Send start command to begin actual recording with sync pulses
-        head_sensor.write(b's')
-        head_sensor.flush()  # Ensure the command is transmitted
+
         if np.isnan(initial_yaw):
             print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed, trying again...")
             head_sensor.close()
@@ -347,10 +344,6 @@ def main():
             head_sensor.write(b'z')
             head_sensor.flush()  # Ensure the command is transmitted
             initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
-            
-            # Send start command to begin actual recording with sync pulses
-            head_sensor.write(b's')
-            head_sensor.flush()  # Ensure the command is transmitted
 
             if np.isnan(initial_yaw):
                 print(Fore.BLUE + f"{args.sensor_location} " + Style.RESET_ALL + "Sensor startup failed again, trying again again...")
@@ -364,10 +357,10 @@ def main():
                 head_sensor.write(b'z')
                 head_sensor.flush()  # Ensure the command is transmitted
                 initial_yaw, initial_roll, initial_pitch = zero_values(head_sensor)
-                
-                # Send start command to begin actual recording with sync pulses
-                head_sensor.write(b's')
-                head_sensor.flush()  # Ensure the command is transmitted
+
+        # Only send start command (with sync pulses) once zeroing has succeeded
+        head_sensor.write(b's')
+        head_sensor.flush()  # Ensure the command is transmitted
 
         # initial_yaw, initial_roll, initial_pitch = 0, 0, 0
 

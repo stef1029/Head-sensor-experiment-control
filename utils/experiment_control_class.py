@@ -143,10 +143,14 @@ class ExperimentControl:
 
         # Name of the signal file that the DAQ script will create
         daq_signal_file = os.path.join(self.output_path, "daq_started.signal")
-        # Block until the DAQ signal file appears
+        # Block until the DAQ signal file appears, or the process exits with an error
         while not os.path.exists(daq_signal_file):
+            if self.arduino_DAQ_process.poll() is not None:
+                raise RuntimeError(
+                    "Arduino DAQ process exited during startup — handshake with Arduino likely failed."
+                )
             time.sleep(0.5)
-        
+
         os.remove(daq_signal_file)
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Arduino DAQ script started.")
 

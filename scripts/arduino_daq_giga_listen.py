@@ -117,7 +117,12 @@ async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=
 
     ser.write("s".encode("utf-8"))
     ser.reset_input_buffer()
-    ser.read_until(b"s")
+    ser.timeout = 5
+    response = ser.read_until(b"s")
+    ser.timeout = 1
+    if not response.endswith(b"s"):
+        ser.close()
+        raise RuntimeError("Arduino DAQ handshake failed: no response from Arduino within 5 seconds.")
 
     # Create a signal file indicating DAQ has started
     daq_signal_file = output_path / "daq_started.signal"
