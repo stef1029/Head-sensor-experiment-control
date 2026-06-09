@@ -25,6 +25,22 @@
             "baudrate": 9600
         },
 
+        "CNI_473_laser_1": {
+            "description": "Prolific PL2303GT USB Serial COM Port (COM27)",
+            "vid": "0x067b",
+            "pid": "0x23a3",
+            "serial_number": "AHBAB149907",
+            "baudrate": 115200
+        },
+        
+        "CNI_473_laser_2": {
+            "description": "Prolific PL2303GT USB Serial COM Port (COM31)",
+            "vid": "0x067b",
+            "pid": "0x23a3",
+            "serial_number": "ATCVB148313",
+            "baudrate": 115200
+        },
+
         "imu_exp_daq": {
             "description": "USB Serial Device (COM16)",
             "vid": "0x2341",

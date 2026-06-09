@@ -228,17 +228,15 @@ def cleanup(laser, arduino, laser_type='473'):
     except Exception:
         pass
 
-
 def main():
     # ===== CONFIGURATION — edit these to change test parameters =====
-    LASER_TYPE = '473'              # '473' (Cobolt) or 'red' (635nm)
+    LASER_TYPE = 'red_635'              # '473' (Cobolt) or 'red' (635nm)
     LASER_BOARD = '473_laser_1'     # Board registry name (e.g. '473_laser_1', '473_laser_2', '635nm_laser_1')
-    POWER_MW = 5.0                  # Power in mW for simple turn-on test
-
+    POWER_MW = 10.0                  # Power in mW for simple turn-on test
     # Set to True to run full Arduino stimulation test instead of simple on/off
-    RUN_STIM = False
+    RUN_STIM = True
     ARDUINO_BOARD = 'laser_pulse_board'
-    POWERS_MW = [5.0]               # Power levels in mW (stim mode)
+    POWERS_MW = [10.0]               # Power levels in mW (stim mode)
     STIM_TIMES_MS = [100000]        # Stimulation durations in ms
     NUM_CYCLES = 1                  # Number of cycles per power level
     STIM_DELAY_MS = 500             # Delay between stimulations in ms
@@ -247,7 +245,6 @@ def main():
     # ================================================================
 
     registry = BoardRegistry(DEFAULT_REGISTRY)
-
     try:
         if RUN_STIM:
             success = run_stim_test(
@@ -260,8 +257,7 @@ def main():
                 num_cycles=NUM_CYCLES,
                 stim_delay=STIM_DELAY_MS,
                 pulse_freq=PULSE_FREQ,
-                pulse_on_time=PULSE_ON_TIME_MS,
-            )
+                pulse_on_time=PULSE_ON_TIME_MS,            )
             sys.exit(0 if success else 1)
         else:
             if LASER_TYPE == '473':

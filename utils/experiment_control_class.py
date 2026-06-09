@@ -151,7 +151,13 @@ class ExperimentControl:
                 )
             time.sleep(0.5)
 
-        os.remove(daq_signal_file)
+        # The DAQ process may still hold the file handle briefly on Windows.
+        for _ in range(10):
+            try:
+                os.remove(daq_signal_file)
+                break
+            except PermissionError:
+                time.sleep(0.2)
         print(Fore.MAGENTA + "Experiment control:" + Style.RESET_ALL + "Arduino DAQ script started.")
 
     def start_camera_tracking(self):

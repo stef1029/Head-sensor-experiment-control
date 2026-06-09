@@ -369,14 +369,28 @@ def main():
     # cohort_directories.append(cohort_directory)
 
     # cohort_directory = {
-    #     'local': Path(r"E:\DATA\dan\head_sensor\4_fiber_array_test")} 
+    #     'local': Path(r"E:\DATA\dan\head_sensor\four_fiber_array_test")} 
     # cohort_directories.append(cohort_directory)
 
-    cohort_directory = {
-        'local': Path(r"E:\test_output")} 
-    cohort_directories.append(cohort_directory)
+    #cohort_directory = {
+    #    'local': Path(r"E:\test_output")} 
+    #cohort_directories.append(cohort_directory)
 
-    
+    cohort_directory = {
+        'local': Path(r"E:\DATA\head_sensor\pitx2_opto_titration\excitation")} 
+    cohort_directories.append(cohort_directory) 
+
+    cohort_directory = {
+        'local': Path(r"E:\DATA\head_sensor\pitx2_opto_titration\inhibition")} 
+    cohort_directories.append(cohort_directory) 
+
+    # cohort_directory = {
+    #     'local': Path(r"E:\DATA\head_sensor\pitx2_opto_titration\ephys")} 
+    # cohort_directories.append(cohort_directory) 
+
+    cohort_directory = {
+        'local': Path(r"E:\DATA\head_sensor\pitx2_proj_soma_excite\md")} 
+    cohort_directories.append(cohort_directory) 
  
     # cohort_directory = {
     #     'local': Path(r"D:\test_output")} 
