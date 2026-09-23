@@ -21,8 +21,9 @@ class ExperimentControl:
         self.head_sensor_tag = 'head_imu'
         self.body_sensor_tag = 'body_imu'
         self.arduino_daq_tag = 'imu_exp_daq'
-        self.laser_tag_473nm = '473_laser_1'
-        self.laser_tag_635nm = '635nm_laser_1'
+        # Laser board tag; protocol (cni_laser / cobolt_06mld) is resolved
+        # from the board's "kind" field in board_registry.json.
+        self.laser_tag = '473_laser_1'
         
         self.baud_rate = 57600
         self.timeout = 2
@@ -43,9 +44,11 @@ class ExperimentControl:
         self.head_sensor_script = config.get("HEAD_SENSOR_SCRIPT")
         self.arduino_daq_path = config.get("SERIAL_LISTEN")
         self.camera_exe = config.get("BEHAVIOUR_CAMERA")
-        self.laser_control_473nm = str(config.get("LASER_CONTROL_SCRIPT"))
-        self.laser_control_635nm = str(config.get("RED_LASER_CONTROL_SCRIPT",
-            r"C:\Dev\projects\Head-sensor-experiment-control\red_laser_control.py"))
+        # Single LaserLink-backed stim coordinator; the protocol is chosen
+        # per-board from the registry "kind" field. Falls back to the old
+        # LASER_CONTROL_SCRIPT key if LASER_STIM_SCRIPT is not present.
+        self.laser_stim_script = str(config.get("LASER_STIM_SCRIPT")
+                                     or config.get("LASER_CONTROL_SCRIPT"))
         
         # Board registry path
         registry_path = config.get("BOARD_REGISTRY")
@@ -55,22 +58,14 @@ class ExperimentControl:
             )
         self.registry_path = registry_path
 
-    def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, laser_wavelength='473nm'):
+    def start_stim_board(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay):
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script and tag
-        if laser_wavelength == '473nm':
-            laser_script = self.laser_control_473nm
-            laser_tag = self.laser_tag_473nm
-        else:
-            laser_script = self.laser_control_635nm
-            laser_tag = self.laser_tag_635nm
-
         self.laser_control_process = subprocess.Popen([
-            self.python_exe, laser_script,
+            self.python_exe, self.laser_stim_script,
             '--registry', self.registry_path,
-            '--laser_board', laser_tag,
+            '--laser_board', self.laser_tag,
             '--arduino_board', self.stim_board_tag,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -78,22 +73,14 @@ class ExperimentControl:
              '--stim_delay', str(stim_delay)]
         )
 
-    def start_stim_board_test(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, pulse_freq=0, pulse_on_time=50, laser_wavelength='473nm'):
+    def start_stim_board_test(self, set_laser_powers, stim_times_ms, num_cycles, stim_delay, pulse_freq=0, pulse_on_time=50):
         powers_args = [str(p) for p in set_laser_powers] if isinstance(set_laser_powers, list) else [str(set_laser_powers)]
         stim_times_args = [str(t) for t in stim_times_ms] if isinstance(stim_times_ms, list) else [str(stim_times_ms)]
 
-        # Select the appropriate laser control script and tag
-        if laser_wavelength == '473nm':
-            laser_script = self.laser_control_473nm
-            laser_tag = self.laser_tag_473nm
-        else:
-            laser_script = self.laser_control_635nm
-            laser_tag = self.laser_tag_635nm
-
         self.laser_control_process = subprocess.Popen([
-            self.python_exe, laser_script,
+            self.python_exe, self.laser_stim_script,
             '--registry', self.registry_path,
-            '--laser_board', laser_tag,
+            '--laser_board', self.laser_tag,
             '--arduino_board', self.stim_board_tag,
             '--powers'] + powers_args +
             ['--stim_times'] + stim_times_args +
@@ -275,9 +262,14 @@ class ExperimentControl:
         
         delete_signal_files(self.output_path)
 
-    def configure_boards(self, stim_board=None, head_sensor=None, body_sensor=None, 
-                         daq_board=None, laser_473nm=None, laser_635nm=None):
-        """Set board tag names (human-readable names from board_registry.json)."""
+    def configure_boards(self, stim_board=None, head_sensor=None, body_sensor=None,
+                         daq_board=None, laser_board=None):
+        """Set board tag names (human-readable names from board_registry.json).
+
+        The laser's protocol is no longer selected here — it comes from the
+        board's "kind" field in the registry, so any laser (CNI or Cobolt)
+        is chosen simply by naming its board tag.
+        """
         if stim_board:
             self.stim_board_tag = stim_board
         if head_sensor:
@@ -286,10 +278,8 @@ class ExperimentControl:
             self.body_sensor_tag = body_sensor
         if daq_board:
             self.arduino_daq_tag = daq_board
-        if laser_473nm:
-            self.laser_tag_473nm = laser_473nm
-        if laser_635nm:
-            self.laser_tag_635nm = laser_635nm
+        if laser_board:
+            self.laser_tag = laser_board
 
     def run_experiment(
         self,
@@ -315,14 +305,23 @@ class ExperimentControl:
         run_camera=True,
         run_arduino_daq=True,
         run_stim_board=True,
+        laser_board=None,
         laser_wavelength='473nm'
     ):
-        """Main method to run the experiment, requiring exactly 8 channel names."""
+        """Main method to run the experiment, requiring exactly 8 channel names.
+
+        ``laser_board`` optionally overrides the configured laser tag for
+        this run. ``laser_wavelength`` is descriptive only (saved to
+        metadata); the laser protocol comes from the registry "kind" field.
+        """
 
         # Check channel_list
         if not isinstance(channel_list, list) or len(channel_list) != 8:
             raise ValueError("channel_list must be a list of exactly 8 channel names.")
         self.channel_list = channel_list
+
+        if laser_board:
+            self.laser_tag = laser_board
 
         self.camera_serial_number = camera_serial_number
         self.fps = camera_fps
@@ -381,7 +380,6 @@ class ExperimentControl:
                 stim_delay,
                 pulse_freq=pulse_freq,
                 pulse_on_time=pulse_on_time,
-                laser_wavelength=laser_wavelength
             )
             self.laser_control_process.wait()   # if using laser control board, wait for it to finish
             self.create_stim_signal()   # write signal file to indicate stim is complete

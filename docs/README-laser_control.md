@@ -1,20 +1,30 @@
 # Laser Stimulation Control System
 
 ## Overview
-This system coordinates between a Python controller and an Arduino to deliver precise laser stimulation patterns. The Python script manages a Cobolt laser device while the Arduino handles the precise timing of stimulation pulses.
+This system coordinates between a Python controller and an Arduino to deliver precise laser stimulation patterns. The Python script (`scripts/laser_stim.py`) manages the laser via the **LaserLink** library, while the Arduino handles the precise timing of stimulation pulses (the laser output is gated by a TTL line from the Arduino).
+
+LaserLink exposes one `Laser(name, kind, port)` class and dispatches to a per-vendor backend chosen by the `kind` code:
+
+| Kind           | Hardware                          |
+| -------------- | --------------------------------- |
+| `cni_laser`    | CNI diode laser, RS-232 (e.g. 635 nm red, 473 nm blue) |
+| `cobolt_06mld` | Cobolt 06MLD (requires safety key) |
+
+**Protocol is decoupled from wavelength.** A CNI blue (473 nm) laser uses `cni_laser`, not the Cobolt protocol. The `kind` is read per-board from the `"kind"` field in `config/board_registry.json`, so a laser is selected simply by naming its board tag — no wavelength/protocol mislabelling needed. `laser_stim.py --laser_kind` can override the registry for a one-off.
 
 ## System Components
 
 ### Hardware Requirements
-- Cobolt06MLD laser
+- A CNI or Cobolt laser (per the board's `kind`)
 - Arduino (with digital output pins)
 - Laser control pin (Arduino pin 7)
 - Status LED (Arduino pin 13)
 
 ### Software Components
-1. Python Control Script (`laser_control.py`)
-2. Arduino Firmware (`laser_timing.ino`)
-3. Cobolt Laser SDK (`pycobolt`)
+1. Python Control Script (`scripts/laser_stim.py`)
+2. LaserLink library (vendored in `./LaserLink`, `pip install -e ./LaserLink`)
+3. Arduino Firmware (`laser_timing.ino`)
+4. Cobolt Laser SDK (`pycobolt`, used by the `cobolt_06mld` backend)
 
 ## Communication Protocol
 
@@ -43,8 +53,10 @@ This system coordinates between a Python controller and an Arduino to deliver pr
 
 ### Python-side Parameters
 ```python
---laser_port: COM port for laser (default: COM11)
---arduino_port: COM port for Arduino (default: COM23)
+--registry: Path to board_registry.json (required)
+--laser_board: Laser board tag from the registry (e.g. CNI_473_laser_1)
+--laser_kind: Override the registry "kind" (cni_laser / cobolt_06mld); optional
+--arduino_board: Arduino board tag from the registry (default: laser_pulse_board)
 --powers: List of power levels in mW [5.0, 10.0, 15.0]
 --stim_times: Stimulation durations in ms [50, 100, 250, 500, 1000, 2000]
 --num_cycles: Repetitions per power level (default: 20)
@@ -217,6 +229,7 @@ When modifying the system:
 
 ## Dependencies
 - Python:
+  - laserlink (vendored in `./LaserLink`; `pip install -e ./LaserLink`)
   - pycobolt
   - pyserial
   - keyboard

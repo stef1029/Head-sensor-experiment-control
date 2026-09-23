@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "PowerShell(& \"C:\\\\Users\\\\Public\\\\.conda\\\\behaviour_analysis\\\\python.exe\" -m pip install -e \"c:\\\\Dev\\\\projects\\\\Head-sensor-experiment-control\\\\LaserLink\")",
+      "PowerShell(& \"C:\\\\Users\\\\Public\\\\.conda\\\\behaviour_analysis\\\\python.exe\" -c \"from LaserLink import Laser, known_kinds; print\\('kinds:', known_kinds\\(\\)\\)\")",
+      "Bash(C:/Users/Public/.conda/behaviour_analysis/python.exe c:/Dev/projects/Head-sensor-experiment-control/tests/laser_test.py)"
     ]
   }
 }

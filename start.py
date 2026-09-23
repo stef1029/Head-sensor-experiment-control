@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Set mouse ID and implanted fiber transmission efficiency (TE) here
     """
 
-    mouse_id = "oe2"
+    mouse_id = "acr4"
     # fiber_TE = 
 
     # patch_cord_TE = 30 # 2025-09-24
@@ -32,11 +32,11 @@ if __name__ == "__main__":
     # patch_cord_TE = 40 # cord 6 on array
     # patch_cord_TE = 13 # 2025-10-31
 
-    fiber_TE = 70
-    # patch_cord_TE = 100
+    fiber_TE = 83
+    patch_cord_TE = 38
 
     # patch_cord_TE = 63 #1
-    patch_cord_TE = 64 #4
+    # patch_cord_TE = 64 #4
     # patch_cord_TE = 60 #9
     # patch_cord_TE = 67 #14
 
@@ -195,16 +195,61 @@ if __name__ == "__main__":
 
     # output_folder = r"E:\DATA\head_sensor\tests"
     # at_brain_power_levels = [10]      
-    # stim_times_ms = [10000]    
+    # stim_times_ms = [30000]    
+    # num_cycles = 1
+    # stim_delay = 5000
+    # pulse_freq = 0
+    # pulse_on_time = 0
+    # head_sensor_rotation_angle = 270                                                                                                                    
+    # body_sensor_rotation_angle = 90
+    # notes = "10 mW test of laser for 30s"
+
+    # output_folder = r"E:\DATA\head_sensor\yuanxin"
+    # at_brain_power_levels = [0]      
+    # stim_times_ms = [1800000]    
     # num_cycles = 1
     # stim_delay = 0
     # pulse_freq = 0
     # pulse_on_time = 0
     # head_sensor_rotation_angle = 270                                                                                                                    
     # body_sensor_rotation_angle = 90
-    # notes = "test of laser in"
+    # notes = "open field 30min"
+
+    # output_folder = r"E:\DATA\head_sensor\sst_chrmine"
+    # at_brain_power_levels = [2, 4, 8, 16, 32, 64, 128]   
+    # stim_times_ms = [800]        
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 20 
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270 # chip forward
+    # body_sensor_rotation_angle = 90 # chip backward
+    # notes = "SST-Flpo x vGAT-Cre, Con/Fon-ChRmine in latSC"
+
+    output_folder = r"E:\hex_behav_data\yuanxin"
+    at_brain_power_levels = [8]   
+    stim_times_ms = [1800000]        
+    num_cycles = 50
+    stim_delay = 10000
+    pulse_freq = 0 
+    pulse_on_time = 0
+    head_sensor_rotation_angle = 270 # chip forward
+    body_sensor_rotation_angle = 90 # chip backward
+    notes = "open field"
+
 
     # output_folder = r"E:\DATA\head_sensor\pitx2_proj_soma_excite\md"
+    # at_brain_power_levels = [4, 16, 28, 40]   
+    # stim_times_ms = [1000]        
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 30 
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270 # chip forward
+    # body_sensor_rotation_angle = 90 # chip backward
+    # notes = "Pitx2-cre x con/fon-CatCh, rgAAV-Flpo in MD, no body sensor"
+
+    # output_folder = r"E:\DATA\head_sensor\pitx2_proj_soma_excite\pons"
     # at_brain_power_levels = [4, 16, 28, 40]   
     # stim_times_ms = [1000]        
     # num_cycles = 50
@@ -213,7 +258,7 @@ if __name__ == "__main__":
     # pulse_on_time = 10
     # head_sensor_rotation_angle = 270 # chip forward
     # body_sensor_rotation_angle = 90 # chip backward
-    # notes = "Pitx2-cre x con/fon-CatCh, rgAAV-Flpo in MD, no body sensor"
+    # notes = "Pitx2-cre x con/fon-CatCh, rgAAV-Flpo in pons, no body sensor"
 
     # output_folder = r"E:\DATA\dan\head_sensor\pitx2_opto_titration\ephys"
     # at_brain_power_levels = [10, 20, 30, 40]      
@@ -226,29 +271,29 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 270 # chip forward
     # notes = "fiber on skull, ChRmine in SC Pitx2, -1.4ML"
 
-    output_folder = r"E:\DATA\head_sensor\pitx2_opto_titration\excitation"
-    at_brain_power_levels = [1, 2, 4, 8, 12]
-    stim_times_ms = [100]  
-    # at_brain_power_levels = [0.1, 0.5, 1, 2, 4, 8, 12]   
-    # stim_times_ms = [500]        
-    num_cycles = 50
-    stim_delay = 5000
-    pulse_freq = 30
-    pulse_on_time = 10
-    head_sensor_rotation_angle = 270
-    body_sensor_rotation_angle = 0
-    notes = "4x fiber array in SC Pitx2::ChR2, -1.4ML, P4"
+    # output_folder = r"E:\DATA\head_sensor\yuanxin"
+    # at_brain_power_levels = [12]
+    # stim_times_ms = [1800000]  
+    # # at_brain_power_levels = [0.1, 0.5, 1, 2, 4, 8, 12]   
+    # # stim_times_ms = [500]        
+    # num_cycles = 50
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 270
+    # body_sensor_rotation_angle = 0
+    # notes = "open field"
 
     # output_folder = r"E:\DATA\head_sensor\pitx2_opto_titration\inhibition"
-    # at_brain_power_levels = [12]      
+    # at_brain_power_levels = [2, 4, 8, 12]      
     # stim_times_ms = [500]        
-    # num_cycles = 2
-    # stim_delay = 5000
-    # pulse_freq = 0
-    # pulse_on_time = 0
+    # num_cycles = 50
+    # stim_delay = 10000
+    # pulse_freq = 10
+    # pulse_on_time = 5
     # head_sensor_rotation_angle = 270 # chip forward
     # body_sensor_rotation_angle = 0 
-    # notes = "4x fiber array in SC Pitx2::WiChR, -1.4ML, P4"
+    # notes = "4x fiber array in SC Pitx2::WiChR, -1.4ML, PA - pulsed"
     
     # output_folder = r"E:\DATA\dan\head_sensor\opsin_optimisation\stgtacr2"
     # at_brain_power_levels = [1, 2, 4, 8, 12, 16, 20]      
@@ -317,24 +362,30 @@ if __name__ == "__main__":
     # body_sensor_rotation_angle = 90 # chip backward
     # notes = "Angled fiber in SC, no body sensor, 129.2c"
 
-    mouse_id = 'test'
-    output_folder = r"E:\test_output"
-    at_brain_power_levels = [8]      
-    stim_times_ms = [250]        
-    num_cycles = 10
-    stim_delay = 5000
-    pulse_freq = 30
-    pulse_on_time = 10
-    head_sensor_rotation_angle = 0 # 
-    body_sensor_rotation_angle = 270 # chip forward
-    notes = "4x fiber array in SC, -1.4ML, position 1, body sensor on head"
+    # mouse_id = 'test'
+    # output_folder = r"E:\test_output"
+    # at_brain_power_levels = [8]      
+    # stim_times_ms = [250]        
+    # num_cycles = 10
+    # stim_delay = 5000
+    # pulse_freq = 30
+    # pulse_on_time = 10
+    # head_sensor_rotation_angle = 0 # 
+    # body_sensor_rotation_angle = 270 # chip forward
+    # notes = "4x fiber array in SC, -1.4ML, position 1, body sensor on head"
 
 
-    # Select laser wavelength: '473nm' for blue Cobolt laser, '635nm' for red laser
+    # Select the laser by its board tag from board_registry.json. The
+    # protocol (CNI vs Cobolt) is taken from that board's "kind" field, so
+    # a CNI blue laser is selected simply by naming its tag — no need to
+    # mislabel it as a "635nm" laser.
     # --------> ONLY SELECT ONE <---------
-    # laser_wavelength = '635nm'  # Options: '473nm' or '635nm'
-    laser_wavelength = '473nm'  # Options: '473nm' or '635nm'
-    """ Note: when changing laser wavelength, remember to change/ check patch cord efficiencies above as needed."""
+    # laser_board = '473_laser_1'       # Cobolt 473nm blue (kind=cobolt_06mld)
+    # laser_board = '635nm_laser_1'     # CNI 635nm red    (kind=cni_laser)
+    laser_board = 'CNI_473_laser_2'     # CNI 473nm blue   (kind=cni_laser)
+    # laser_wavelength is descriptive metadata only (saved to the run's metadata.json)
+    laser_wavelength = '473nm'
+    """ Note: when changing laser, remember to change/ check patch cord efficiencies above as needed."""
     #----------------------------------------
 
     """
@@ -349,8 +400,7 @@ if __name__ == "__main__":
         head_sensor='head_imu',
         body_sensor='body_imu',
         daq_board='imu_exp_daq',
-        laser_473nm='473_laser_1',   # Blue laser (Cobolt 473nm)
-        laser_635nm='635nm_laser_1'  # Red laser (635nm)
+        laser_board=laser_board,     # protocol resolved from registry "kind"
     )
 
     # configure camera settings

@@ -1,0 +1,23 @@
+[project]
+name = "laserlink"
+version = "0.1.0"
+description = "Unified laser control library — one Laser API across red 635nm and Cobolt 06MLD backends"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pyserial>=3.5",
+    "pycobolt",
+]
+
+[project.scripts]
+laserlink-test = "LaserLink.test_lasers:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/LaserLink"]
+
+[tool.hatch.metadata]
+allow-direct-references = true

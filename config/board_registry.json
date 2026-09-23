@@ -6,7 +6,8 @@
             "vid": "0x25dc",
             "pid": "0x6",
             "serial_number": "000013245678",
-            "baudrate": 115200
+            "baudrate": 115200,
+            "kind": "cobolt_06mld"
         },
 
         "473_laser_2": {
@@ -14,7 +15,8 @@
             "vid": "0x25dc",
             "pid": "0x6",
             "serial_number": null,
-            "baudrate": 115200
+            "baudrate": 115200,
+            "kind": "cobolt_06mld"
         },
 
         "635nm_laser_1": {
@@ -22,7 +24,8 @@
             "vid": "0x67b",
             "pid": "0x23a3",
             "serial_number": "DODNB2A4517",
-            "baudrate": 9600
+            "baudrate": 9600,
+            "kind": "cni_laser"
         },
 
         "CNI_473_laser_1": {
@@ -30,15 +33,17 @@
             "vid": "0x067b",
             "pid": "0x23a3",
             "serial_number": "AHBAB149907",
-            "baudrate": 115200
+            "baudrate": 9600,
+            "kind": "cni_laser"
         },
-        
+
         "CNI_473_laser_2": {
             "description": "Prolific PL2303GT USB Serial COM Port (COM31)",
             "vid": "0x067b",
             "pid": "0x23a3",
             "serial_number": "ATCVB148313",
-            "baudrate": 115200
+            "baudrate": 9600,
+            "kind": "cni_laser"
         },
 
         "imu_exp_daq": {

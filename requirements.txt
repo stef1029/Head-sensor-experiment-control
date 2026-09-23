@@ -4,4 +4,8 @@ keyboard
 pyserial
 pyqtgraph
 pynwb
+colorama
+pycobolt
+# LaserLink is vendored in ./LaserLink — install editable:
+#   pip install -e ./LaserLink
 # Add other dependencies here

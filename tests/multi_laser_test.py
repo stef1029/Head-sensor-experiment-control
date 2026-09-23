@@ -1,9 +1,11 @@
 """
-Multi-laser test script — turns on several lasers (473nm Cobolt and/or 635nm red)
-at the same time at configured powers, holds until DELETE, then shuts down all.
+Multi-laser test script (LaserLink-backed) — turns on several lasers at the
+same time at configured powers, holds until DELETE, then shuts down all.
 
-Edit the LASERS list in main() to choose which boards to test.
-Each laser is brought up / torn down in its own thread so they run in parallel.
+Works for any mix of CNI (cni_laser) and Cobolt (cobolt_06mld) lasers; each
+laser's protocol is resolved from its "kind" field in the board registry.
+Edit the LASERS list in main() to choose which boards to test. Each laser is
+brought up / torn down in its own thread so they run in parallel.
 """
 
 import sys
@@ -17,9 +19,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 import keyboard
 from colorama import init, Fore, Style
-from pycobolt import Cobolt06MLD
-from red_laser_control import RedLaser
-from laser_control import wait_for_key
+
+from LaserLink import Laser
 from utils.board_registry import BoardRegistry
 
 init()
@@ -38,14 +39,14 @@ def _tagged_print(tag, color, msg):
 
 
 class LaserHandle:
-    """Wraps a single laser device with bring-up / shutdown logic."""
+    """Wraps a single LaserLink laser with bring-up / shutdown logic."""
 
-    def __init__(self, registry, board_name, laser_type, power_mw, color):
+    def __init__(self, registry, board_name, power_mw, color, kind_override=None):
         self.registry = registry
         self.board_name = board_name
-        self.laser_type = laser_type
         self.power_mw = power_mw
         self.color = color
+        self.kind_override = kind_override
         self.laser = None
         self.ready = False
 
@@ -54,31 +55,24 @@ class LaserHandle:
 
     def bring_up(self):
         port = self.registry.find_board_port(self.board_name)
-        self.log(f"resolved to {port}")
+        kind = self.kind_override or self.registry.get_kind(self.board_name)
+        if not kind:
+            raise ValueError(
+                f"No laser kind for board '{self.board_name}' — add a \"kind\" "
+                f"field to board_registry.json or set 'kind' in the LASERS entry."
+            )
+        vendor_kwargs = {}
+        if kind == "cni_laser":
+            vendor_kwargs["baudrate"] = self.registry.get_baudrate(self.board_name)
 
-        if self.laser_type == '473':
-            self.laser = Cobolt06MLD(port=port)
-            self.laser.clear_fault()
-            self.laser.constant_power(power=0)
-            self.laser.turn_on()
-            time.sleep(2)
-
-            if "Waiting for key" in self.laser.get_state():
-                self.log(Fore.BLUE + "waiting for key — toggle key on box to continue" + Style.RESET_ALL)
-                if not wait_for_key(self.laser):
-                    self.log(Fore.YELLOW + "key check interrupted" + Style.RESET_ALL)
-                    return False
-
-            self.laser.constant_power(power=self.power_mw)
-        elif self.laser_type == 'red':
-            baudrate = self.registry.get_baudrate(self.board_name)
-            self.laser = RedLaser(port=port, baudrate=baudrate)
-            self.laser.connect()
-            self.laser.turn_on()
-            time.sleep(0.5)
-            self.laser.set_power(self.power_mw)
-        else:
-            raise ValueError(f"Unknown laser_type '{self.laser_type}' for {self.board_name}")
+        self.log(f"resolved to {port} (kind={kind})")
+        self.laser = Laser(name=self.board_name, kind=kind, port=port, **vendor_kwargs)
+        self.laser.connect()
+        if self.laser.requires_key:
+            self.log(Fore.BLUE + "waiting for key — toggle key on box to continue" + Style.RESET_ALL)
+        self.laser.wait_ready(timeout=30.0)
+        self.laser.set_power(self.power_mw)
+        self.laser.turn_on()
 
         self.ready = True
         self.log(Fore.GREEN + f"ON at {self.power_mw} mW" + Style.RESET_ALL)
@@ -88,14 +82,8 @@ class LaserHandle:
         if not self.laser:
             return
         try:
-            if self.laser_type == '473':
-                self.laser.constant_power(power=0)
-                self.laser.turn_off()
-                self.laser.disconnect()
-            else:
-                self.laser.turn_off()
-                time.sleep(0.5)
-                self.laser.disconnect()
+            self.laser.turn_off()
+            self.laser.disconnect()
             self.log(Fore.GREEN + "OFF and disconnected" + Style.RESET_ALL)
         except Exception as e:
             self.log(Fore.RED + f"shutdown error: {e}" + Style.RESET_ALL)
@@ -104,8 +92,8 @@ class LaserHandle:
 def run_parallel(registry, laser_specs):
     """Bring up all lasers concurrently, hold until DELETE, then shut down all."""
     handles = [
-        LaserHandle(registry, spec['board'], spec['type'], spec['power_mw'],
-                    _LOG_COLORS[i % len(_LOG_COLORS)])
+        LaserHandle(registry, spec['board'], spec['power_mw'],
+                    _LOG_COLORS[i % len(_LOG_COLORS)], spec.get('kind'))
         for i, spec in enumerate(laser_specs)
     ]
 
@@ -113,7 +101,7 @@ def run_parallel(registry, laser_specs):
     print(Fore.CYAN + f"MULTI-LASER TEST — {len(handles)} laser(s)" + Style.RESET_ALL)
     print(Fore.CYAN + "=" * 70 + Style.RESET_ALL)
     for h in handles:
-        print(f"  {h.color}{h.board_name}{Style.RESET_ALL}  type={h.laser_type}  power={h.power_mw} mW")
+        print(f"  {h.color}{h.board_name}{Style.RESET_ALL}  power={h.power_mw} mW")
     print(f"\n  Press {Fore.YELLOW}DELETE{Style.RESET_ALL} to turn all lasers off\n")
 
     try:
@@ -146,10 +134,12 @@ def run_parallel(registry, laser_specs):
 
 def main():
     # ===== CONFIGURATION — edit this list to choose which lasers to test =====
-    # Each entry: board name from board_registry.json, type ('473' or 'red'), power in mW
+    # Each entry: board name from board_registry.json, power in mW.
+    # Optionally add 'kind' to override the registry (e.g. 'cni_laser').
     LASERS = [
-        {'board': '473_laser_1',   'type': '473', 'power_mw': 10.0},
-        {'board': '473_laser_2',   'type': '473', 'power_mw': 10.0},        # {'board': '635nm_laser_1', 'type': 'red', 'power_mw': 10.0},
+        {'board': 'CNI_473_laser_1', 'power_mw': 10.0},
+        {'board': 'CNI_473_laser_2', 'power_mw': 10.0},
+        # {'board': '473_laser_1',   'power_mw': 10.0},   # Cobolt
     ]
     # =========================================================================
 

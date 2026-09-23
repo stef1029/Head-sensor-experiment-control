@@ -4,8 +4,7 @@
     "SERIAL_LISTEN": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\arduino_daq_giga_listen.py",
     "BEHAVIOUR_CAMERA": "C:\\Dev\\projects\\Camera\\x64\\Release\\Camera_to_binary.exe",
     "HEAD_SENSOR_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\head_sensor.py",
-    "LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\laser_control.py",
-    "RED_LASER_CONTROL_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\red_laser_control.py",
+    "LASER_STIM_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\laser_stim.py",
     "CALIBRATION_SCRIPT": "C:\\Dev\\projects\\Head-sensor-experiment-control\\scripts\\head_sensor_calibration_ctrl.py",
     "BOARD_REGISTRY": "C:\\Dev\\projects\\Head-sensor-experiment-control\\config\\board_registry.json"
 }

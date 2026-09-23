@@ -115,14 +115,16 @@ async def listen(channel_names, new_mouse_ID=None, new_date_time=None, new_path=
         ser = serial.Serial(COM_PORT, 115200, timeout=1)
         time.sleep(3)
 
-    ser.write("s".encode("utf-8"))
+    # Send the start byte expected by the firmware.
+    # The Arduino does not have to echo it back for acquisition to begin.
     ser.reset_input_buffer()
-    ser.timeout = 5
-    response = ser.read_until(b"s")
+    ser.write(b"s")
+    time.sleep(0.1)
+
+    # Drain any immediate startup noise without requiring an explicit ACK.
+    ser.timeout = 0.2
+    _ = ser.read_until(b"s")
     ser.timeout = 1
-    if not response.endswith(b"s"):
-        ser.close()
-        raise RuntimeError("Arduino DAQ handshake failed: no response from Arduino within 5 seconds.")
 
     # Create a signal file indicating DAQ has started
     daq_signal_file = output_path / "daq_started.signal"

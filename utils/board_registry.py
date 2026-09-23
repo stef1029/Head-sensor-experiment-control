@@ -37,6 +37,7 @@ class BoardInfo:
     pid: Optional[int]
     serial_number: Optional[str]
     baudrate: int
+    kind: Optional[str] = None  # laser protocol code for LaserLink (e.g. "cni_laser", "cobolt_06mld")
 
 
 class BoardNotFoundError(RuntimeError):
@@ -108,6 +109,7 @@ class BoardRegistry:
                 pid=pid,
                 serial_number=info.get("serial_number"),
                 baudrate=info.get("baudrate", 115200),
+                kind=info.get("kind"),
             )
 
     def reload(self) -> None:
@@ -166,6 +168,14 @@ class BoardRegistry:
     def get_baudrate(self, name: str) -> int:
         """Return the configured default baud rate for a board."""
         return self.get_board_info(name).baudrate
+
+    def get_kind(self, name: str) -> Optional[str]:
+        """Return the laser protocol kind for a board, or None if unset.
+
+        The kind is the LaserLink backend code (e.g. "cni_laser",
+        "cobolt_06mld"). Only laser boards carry it; everything else is None.
+        """
+        return self.get_board_info(name).kind
 
 
 def main():
